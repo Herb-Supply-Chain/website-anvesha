@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docker:build": "docker build -t web-anvesha .",
+    "docker:start": "docker run --rm -p 3000:3000 web-anvesha",
+    "docker:up": "docker compose up --build"
   },
   "dependencies": {
     "next": "16.0.3",

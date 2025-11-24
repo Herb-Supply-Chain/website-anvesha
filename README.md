@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Docker
+
+Run the app with Docker (production):
+
+```powershell
+docker build -t web-anvesha .
+docker run --rm -p 3000:3000 web-anvesha
+```
+
+Or use `docker compose` to run the production or development service:
+
+```powershell
+# Build and run the production image
+docker compose up --build
+
+# Run the development service with file mounts
+docker compose up dev
+```
+
+The app will be available at `http://localhost:3000`.
