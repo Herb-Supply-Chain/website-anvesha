@@ -49,7 +49,7 @@ export default function PortalsPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 bg-[#064E3B] shadow-md">
+            <nav className="fixed top-0 w-full z-50 bg-[#01aeae] shadow-md">
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -138,3 +138,4 @@ export default function PortalsPage() {
         </div>
     )
 }
+

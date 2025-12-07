@@ -301,7 +301,7 @@ export default function ManufacturingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             {/* Header */}
-            <div className="bg-[#064E3B] text-white p-6 shadow-lg">
+            <div className="bg-[#01aeae] text-white p-6 shadow-lg">
                 <div className="flex items-center justify-between max-w-7xl mx-auto">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
@@ -569,3 +569,4 @@ export default function ManufacturingPage() {
         </div>
     )
 }
+

@@ -90,7 +90,7 @@ export default function AdminPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             {/* Header */}
-            <div className="bg-[#064E3B] text-white p-6 shadow-lg">
+            <div className="bg-[#01aeae] text-white p-6 shadow-lg">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -459,3 +459,4 @@ export default function AdminPage() {
         </div>
     )
 }
+

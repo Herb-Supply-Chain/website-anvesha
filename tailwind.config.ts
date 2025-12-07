@@ -12,6 +12,10 @@ const config: Config = {
                 primary: '#3d7a7a',
                 'primary-dark': '#2d5a5a',
             },
+            fontFamily: {
+                playfair: ['var(--font-playfair)', 'serif'],
+                inter: ['var(--font-inter)', 'sans-serif'],
+            },
         },
     },
     plugins: [],

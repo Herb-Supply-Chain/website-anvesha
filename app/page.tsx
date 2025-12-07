@@ -9,30 +9,18 @@ function LoginCard() {
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [role, setRole] = useState('')
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-
-    const roles = ['Processor', 'Lab QA', 'Manufacturer', 'Admin']
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-        if (!role) {
-            setError('Please select a user role')
-            return
-        }
         setIsLoading(true)
         try {
             const result = await AuthService.login(email, password)
             if (result.success && result.user) {
-                if (result.user.role !== role) {
-                    setError('Invalid role selected')
-                    setIsLoading(false)
-                    return
-                }
                 if (result.user.role === 'Admin') router.push('/admin')
-                else router.push('/processor') // Default to processor for demo or specific dashboard
+                else router.push('/processor')
             } else {
                 setError(result.message)
                 setIsLoading(false)
@@ -44,49 +32,44 @@ function LoginCard() {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md border border-gray-100">
-            <h3 className="text-2xl font-bold text-teal-800 text-center mb-6">Login</h3>
+        <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border border-gray-200 hover:shadow-3xl transition-shadow duration-300">
+            <div className="text-center mb-8">
+                <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 bg-white rounded-xl p-2 shadow-lg">
+                        <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
+                    </div>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">Government Login</h3>
+                <p className="text-sm text-gray-500">Authorized Personnel Only</p>
+            </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-6">
                 {error && (
-                    <div className="bg-red-50 text-red-600 px-3 py-2 rounded text-sm text-center border border-red-100">
+                    <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm text-center border border-red-200 animate-shake">
                         {error}
                     </div>
                 )}
 
-                <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1 ml-1">Role</label>
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all text-sm"
-                        required
-                    >
-                        <option value="" disabled>Select Role</option>
-                        {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1 ml-1 uppercase">Email Address</label>
+                <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all text-sm"
+                        placeholder="your.email@ayush.gov.in"
+                        className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
                         required
                     />
                 </div>
 
-                <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1 ml-1 uppercase">Password</label>
+                <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter your password"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all text-sm"
+                        className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
                         required
                     />
                 </div>
@@ -94,18 +77,28 @@ function LoginCard() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg transition-colors shadow-md hover:shadow-lg disabled:opacity-70 mt-4"
+                    className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                    {isLoading ? 'Processing...' : 'Login'}
+                    {isLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                        </span>
+                    ) : 'Sign In'}
                 </button>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-center text-gray-400">
-                        Secure Login: This is an official government portal. Never share your credentials.
-                    </p>
-                    <p className="text-xs text-center text-gray-400 mt-2">
-                        (Demo: processor@ayush.gov.in / pass123)
-                    </p>
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <p className="text-xs text-center text-blue-800 font-medium mb-2">
+                            🔒 Secure Government Portal
+                        </p>
+                        <p className="text-xs text-center text-gray-600">
+                            Demo: processor@ayush.gov.in / pass123
+                        </p>
+                    </div>
                 </div>
             </form>
         </div>
@@ -186,58 +179,58 @@ export default function LandingPage() {
         {
             title: 'End-to-End Traceability',
             description: 'Track herbs from farm to shelf with blockchain-verified provenance',
-            icon: '🌿'
+            icon: 'T'
         },
         {
             title: 'Quality Assured by Labs',
             description: 'Laboratory testing and certification at every processing stage',
-            icon: '🔬'
+            icon: 'Q'
         },
         {
             title: 'Blockchain-Immutable Records',
             description: 'Tamper-proof ledger ensuring data integrity and transparency',
-            icon: '🔗'
+            icon: 'B'
         },
         {
             title: 'Sustainable Sourcing',
             description: 'Geo-fencing and conservation compliance for ethical harvesting',
-            icon: '🌍'
+            icon: 'S'
         },
         {
             title: 'Farmer Empowerment',
             description: 'Direct market access and fair pricing for smallholder farmers',
-            icon: '👨‍🌾'
+            icon: 'F'
         },
         {
             title: 'Consumer Confidence',
             description: 'QR-code verification for authenticity and complete transparency',
-            icon: '✓'
+            icon: 'C'
         }
     ]
 
     const processSteps = [
         {
-            icon: '📍',
+            icon: '1',
             title: 'Geo-Tagged Collection',
             description: 'GPS-verified harvesting with collector identity and timestamp'
         },
         {
-            icon: '🧪',
+            icon: '2',
             title: 'Laboratory Testing',
             description: 'Quality analysis for moisture, pesticides, and DNA authentication'
         },
         {
-            icon: '⚙️',
+            icon: '3',
             title: 'Processing & Storage',
             description: 'Controlled drying, grinding, and storage with condition monitoring'
         },
         {
-            icon: '📦',
+            icon: '4',
             title: 'Smart Packaging',
             description: 'Blockchain-generated QR codes for end-to-end traceability'
         },
         {
-            icon: '📱',
+            icon: '5',
             title: 'Consumer Verification',
             description: 'Scan QR codes to view complete provenance and quality certificates'
         }
@@ -260,98 +253,86 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Navigation */}
-            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#064E3B]'
+            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#01aeae]'
                 } `}>
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                                <span className="text-2xl">🌿</span>
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-white rounded-xl p-1 shadow-md">
+                                <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className={`text-sm font-bold transition-colors ${scrolled ? 'text-gray-800' : 'text-white'
                                     } `}>
-                                    {t[language].govtIndia}
+                                    Government of India | भारत सरकार
                                 </h1>
-                                <p className={`text-xs transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
+                                <p className={`text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
                                     } `}>
-                                    ANVESHA
+                                    Ministry of AYUSH | आयुष मंत्रालय
+                                </p>
+                                <p className={`text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
+                                    } `}>
+                                    ANVESHA | अन्वेषा
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                            <Link href="/" className={`text-sm font-medium transition-all ${scrolled ? 'text-gray-700 hover:text-teal-600' : 'text-white hover:text-teal-200'
-                                } hover:scale-105`}>
-                                {t[language].navHome}
-                            </Link>
-                            <Link href="/about" className={`text-sm font-medium transition-all ${scrolled ? 'text-gray-700 hover:text-teal-600' : 'text-white hover:text-teal-200'
-                                } hover:scale-105`}>
-                                {t[language].navAbout}
-                            </Link>
-                            <Link href="/contact" className={`text-sm font-medium transition-all ${scrolled ? 'text-gray-700 hover:text-teal-600' : 'text-white hover:text-teal-200'
-                                } hover:scale-105`}>
-                                {t[language].navContact}
-                            </Link>
-                            <Link href="/portals" className={`text-sm font-medium transition-all ${scrolled ? 'text-gray-700 hover:text-teal-600' : 'text-white hover:text-teal-200'
-                                } hover:scale-105`}>
-                                {t[language].navPortals}
-                            </Link>
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={toggleLanguage}
-                                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105 ${scrolled
-                                    ? 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-                                    : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                                onClick={() => setLanguage('en')}
+                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all hover:scale-105 ${language === 'en'
+                                    ? 'bg-white text-teal-700 shadow-md'
+                                    : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-md'
                                     }`}
                             >
-                                {language === 'en' ? '🇮🇳 हिंदी' : '🇬🇧 English'}
+                                English
                             </button>
-                            <Link href="/register">
-                                <button className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-all hover:shadow-lg hover:scale-105">
-                                    {t[language].navRegister}
-                                </button>
-                            </Link>
+                            <button
+                                onClick={() => setLanguage('hi')}
+                                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all hover:scale-105 ${language === 'hi'
+                                    ? 'bg-white text-teal-700 shadow-md'
+                                    : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-md'
+                                    }`}
+                            >
+                                हिंदी
+                            </button>
                         </div>
                     </div>
                 </div>
             </nav>
 
             {/* Hero Section - New Design */}
-            <section className="relative min-h-screen bg-gradient-to-br from-[#E8F5F3] via-[#D4EDE9] to-[#C0E5DF] pt-20">
+            <section className="relative min-h-screen bg-white pt-20">
                 <div className="max-w-7xl mx-auto px-6 py-20">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
                         {/* Left Side - Branding */}
                         <div className="space-y-8">
-                            {/* Ministry Badge */}
-                            <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-teal-200">
-                                <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-                                <span className="text-sm font-medium text-teal-800">Ministry of AYUSH Initiative</span>
-                            </div>
+
 
                             {/* ANVESHA Title */}
-                            <div>
-                                <h1 className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-600 mb-4">
+                            <div className="space-y-4">
+                                <h1 className="text-6xl lg:text-7xl font-bold text-teal-600 tracking-wide">
                                     ANVESHA
                                 </h1>
-                                <h2 className="text-4xl font-bold text-teal-900 mb-6">
+                                <h2 className="text-3xl lg:text-4xl font-bold text-teal-800">
                                     for Ayurvedic Herbs
                                 </h2>
-                                <p className="text-lg text-gray-700 leading-relaxed">
-                                    A national initiative ensuring <span className="font-semibold text-teal-700">authenticity</span>, <span className="font-semibold text-teal-700">quality</span>, and <span className="font-semibold text-teal-700">sustainable sourcing</span> across India's herbal value chain.
+                                <p className="text-lg text-gray-700 leading-relaxed max-w-2xl">
+                                    A national initiative ensuring <span className="font-bold text-teal-600">authenticity</span>, <span className="font-bold text-teal-600">quality</span>, and <span className="font-bold text-teal-600">sustainable sourcing</span> across India's herbal value chain.
                                 </p>
                             </div>
 
                             {/* Key Metrics */}
-                            <div className="grid grid-cols-3 gap-6">
+                            <div className="grid grid-cols-3 gap-12 mt-8">
                                 <div className="text-center">
-                                    <div className="text-4xl font-bold text-teal-600 mb-1">100%</div>
+                                    <div className="text-5xl font-bold text-teal-600 mb-2">100%</div>
                                     <div className="text-sm text-gray-600 font-medium">Traceable</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-4xl font-bold text-teal-600 mb-1">24/7</div>
+                                    <div className="text-5xl font-bold text-teal-600 mb-2">24/7</div>
                                     <div className="text-sm text-gray-600 font-medium">Monitoring</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-4xl font-bold text-teal-600 mb-1">Secure</div>
+                                    <div className="text-5xl font-bold text-teal-600 mb-2">Secure</div>
                                     <div className="text-sm text-gray-600 font-medium">Blockchain</div>
                                 </div>
                             </div>
@@ -359,18 +340,16 @@ export default function LandingPage() {
                             {/* Action Buttons */}
                             <div className="flex gap-4">
                                 <Link href="/consumer-portal">
-                                    <button className="bg-[#064E3B] hover:bg-[#054332] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
-                                        
+                                    <button className="bg-[#01aeae] hover:bg-[#019999] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
+
                                         <span>Verify Product</span>
                                     </button>
                                 </Link>
-                                <button
-                                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                                    className="bg-white hover:bg-gray-50 text-teal-700 px-8 py-4 rounded-lg font-semibold border-2 border-teal-600 transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2"
-                                >
-                                    
-                                    <span>Login / GOV</span>
-                                </button>
+                                <Link href="/contact">
+                                    <button className="bg-white hover:bg-gray-50 text-teal-700 px-8 py-4 rounded-lg font-semibold border-2 border-teal-600 transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                                        <span>Contact Us</span>
+                                    </button>
+                                </Link>
                             </div>
                         </div>
 
@@ -389,10 +368,11 @@ export default function LandingPage() {
             <section className="py-20 px-6 bg-white">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h3 className="text-4xl font-bold text-gray-900 mb-4">
-                            <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">{t[language].keyInitiatives}</span>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
+                            {t[language].keyInitiatives}
                         </h3>
-                        <p className="text-gray-600 text-lg">{t[language].keyInitiativesDesc}</p>
+                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].keyInitiativesDesc}</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {initiatives.map((initiative, index) => (
@@ -400,9 +380,9 @@ export default function LandingPage() {
                                 key={index}
                                 className="group bg-gradient-to-br from-white to-gray-50 p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-500 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer"
                             >
-                                <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{initiative.icon}</div>
-                                <h4 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors">{initiative.title}</h4>
-                                <p className="text-gray-600 leading-relaxed">{initiative.description}</p>
+                                <div className="w-16 h-16 bg-teal-600 text-white rounded-full flex items-center justify-center mb-5 text-2xl font-bold group-hover:bg-teal-700 transition-colors duration-300">{initiative.icon}</div>
+                                <h4 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors font-playfair">{initiative.title}</h4>
+                                <p className="text-gray-600 leading-relaxed text-base">{initiative.description}</p>
                                 <div className="mt-4 text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                                     Learn more →
                                 </div>
@@ -416,10 +396,11 @@ export default function LandingPage() {
             < section className="py-20 px-6 bg-gradient-to-br from-gray-50 to-teal-50" >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h3 className="text-4xl font-bold text-gray-900 mb-4">
-                            <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">Process Flow</span>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
+                            Process Flow
                         </h3>
-                        <p className="text-gray-600 text-lg">End-to-end journey from farm to consumer</p>
+                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">End-to-end journey from farm to consumer</p>
                     </div>
                     <div className="relative">
                         {/* Connection Line */}
@@ -429,10 +410,10 @@ export default function LandingPage() {
                             {processSteps.map((step, index) => (
                                 <div key={index} className="flex flex-col items-center text-center group">
                                     <div className="w-20 h-20 bg-white rounded-full shadow-xl flex items-center justify-center mb-4 border-4 border-teal-500 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-2xl">
-                                        <span className="text-3xl">{step.icon}</span>
+                                        <span className="text-2xl font-bold text-teal-600">{step.icon}</span>
                                     </div>
-                                    <h4 className="font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">{step.title}</h4>
-                                    <p className="text-sm text-gray-600">{step.description}</p>
+                                    <h4 className="font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors font-playfair text-base">{step.title}</h4>
+                                    <p className="text-sm text-gray-600 leading-relaxed">{step.description}</p>
                                 </div>
                             ))}
                         </div>
@@ -444,10 +425,11 @@ export default function LandingPage() {
             < section className="py-20 px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h3 className="text-4xl font-bold text-gray-900 mb-4">
-                            <span className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">Aligned with National Standards</span>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
+                            Aligned with National Standards
                         </h3>
-                        <p className="text-gray-600 text-lg">Compliant with regulatory and quality frameworks</p>
+                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">Compliant with regulatory and quality frameworks</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {standards.map((standard, index) => (
@@ -455,9 +437,9 @@ export default function LandingPage() {
                                 key={index}
                                 className="bg-gradient-to-br from-teal-50 to-blue-50 p-8 rounded-2xl text-center hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-teal-500"
                             >
-                                <div className="text-3xl font-bold text-teal-600 mb-3">{standard.name}</div>
+                                <div className="text-3xl font-bold text-teal-600 mb-3 font-playfair">{standard.name}</div>
                                 <div className="text-sm font-semibold text-gray-800 mb-2">{standard.full}</div>
-                                <div className="text-xs text-gray-600">{standard.desc}</div>
+                                <div className="text-xs text-gray-600 leading-relaxed">{standard.desc}</div>
                             </div>
                         ))}
                     </div>
@@ -465,45 +447,36 @@ export default function LandingPage() {
             </section >
 
             {/* Pilot Impact */}
-            < section className="py-20 px-6 bg-gradient-to-br from-teal-600 via-teal-700 to-blue-600 text-white relative overflow-hidden" >
-                {/* Animated background */}
-                < div className="absolute inset-0 overflow-hidden pointer-events-none" >
-                    <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-                </div >
-                <div className="max-w-7xl mx-auto relative z-10">
+            <section className="py-20 px-6 bg-white">
+                <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h3 className="text-4xl font-bold mb-4">Pilot Impact</h3>
-                        <p className="text-teal-100 text-lg">Real-world results from our blockchain traceability system</p>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">Pilot Impact</h3>
+                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">Real-world results from our blockchain traceability system</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
                         {stats.map((stat, index) => (
                             <div
                                 key={index}
-                                className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 border border-white/20"
+                                className="bg-white p-8 rounded-2xl text-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
                             >
-                                <div className="text-5xl font-bold mb-2">{stat.value}</div>
-                                <div className="text-teal-100">{stat.label}</div>
+                                <div className="text-5xl font-bold text-teal-600 mb-2">{stat.value}</div>
+                                <div className="text-gray-600 font-medium">{stat.label}</div>
                             </div>
                         ))}
                     </div>
 
                     {/* Testimonial */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-10 max-w-4xl mx-auto border border-white/20">
-                        <div className="text-6xl mb-6 text-center opacity-50">"</div>
-                        <p className="text-lg text-center leading-relaxed mb-6 italic">
-                            This initiative has been transformative in ensuring the authenticity and sustainability
-                            of our Ayurvedic herbs. The ANVESHA traceability system has empowered our farmers and given our
-                            customers complete confidence in the products they consume. It's a model that can be
-                            replicated across the entire AYUSH sector.
+                    <div className="bg-white rounded-3xl p-12 max-w-4xl mx-auto shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                        <p className="text-lg text-center leading-relaxed mb-8 text-gray-700 italic">
+                            "This initiative has been transformative in ensuring the authenticity and quality of our herbal products. The blockchain-enabled traceability system has empowered our farmers and given our consumers complete confidence in the products they purchase. It represents the perfect synergy between traditional knowledge and modern technology."
                         </p>
                         <div className="text-center">
-                            <div className="font-bold text-xl">Joint Secretary, Ministry of AYUSH</div>
-                            <div className="text-teal-200 text-sm">Government of India</div>
+                            <div className="font-bold text-xl text-gray-900">Joint Secretary, Ministry of AYUSH</div>
                         </div>
                     </div>
                 </div>
-            </section >
+            </section>
 
             {/* Footer */}
             <footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6">
@@ -560,3 +533,4 @@ export default function LandingPage() {
         </div >
     )
 }
+

@@ -185,7 +185,7 @@ export default function ProcessorDashboard() {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Header */}
-            <div className="bg-[#064E3B] text-white p-4">
+            <div className="bg-[#01aeae] text-white p-4">
                 <div className="flex items-center gap-3">
                     <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
@@ -287,3 +287,4 @@ export default function ProcessorDashboard() {
         </div>
     )
 }
+
