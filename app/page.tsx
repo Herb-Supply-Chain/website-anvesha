@@ -20,6 +20,7 @@ function LoginCard() {
             const result = await AuthService.login(email, password)
             if (result.success && result.user) {
                 if (result.user.role === 'Admin') router.push('/admin')
+                else if (result.user.role === 'Lab QA') router.push('/lab')
                 else router.push('/processor')
             } else {
                 setError(result.message)
@@ -326,7 +327,7 @@ export default function LandingPage() {
                     <img
                         src="/pixel-tree.png"
                         alt=""
-                        className="w-[2100px] h-[2100px] object-contain grayscale translate-x-72"
+                        className="w-[60000px] h-[60000px] object-contain grayscale translate-x-[15px]"
                         aria-hidden="true"
                     />
                 </div>
