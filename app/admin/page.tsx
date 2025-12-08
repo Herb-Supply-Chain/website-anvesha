@@ -6,16 +6,74 @@ import QuickLabRegistrationForm from './components/QuickLabRegistrationForm'
 import QuickProcessorRegistrationForm from './components/QuickProcessorRegistrationForm'
 import QuickManufacturerRegistrationForm from './components/QuickManufacturerRegistrationForm'
 
+interface PendingRegistration {
+    id: number
+    type: 'Laboratory' | 'Processor' | 'Manufacturer'
+    name: string
+    contact: string
+    email: string
+    phone: string
+    submittedDate: string
+    nablNumber?: string
+    licenseNumber?: string
+    fssaiNumber?: string
+    address?: string
+    city?: string
+    state?: string
+    pincode?: string
+}
+
 export default function AdminPage() {
     const [activeSection, setActiveSection] = useState('new-registration')
     const [registrationRole, setRegistrationRole] = useState('')
     const [showApprovals, setShowApprovals] = useState(false)
+    const [selectedRegistration, setSelectedRegistration] = useState<PendingRegistration | null>(null)
 
-    // Mock pending registrations data
-    const [pendingRegistrations, setPendingRegistrations] = useState([
-        { id: 1, type: 'Laboratory', name: 'AYUSH Quality Labs', contact: 'Dr. Sharma', email: 'sharma@ayushlab.com', phone: '+91 98765 43210', submittedDate: '2025-12-07' },
-        { id: 2, type: 'Processor', name: 'Herbal Processing Unit', contact: 'Mr. Kumar', email: 'kumar@herbprocess.com', phone: '+91 98765 43211', submittedDate: '2025-12-06' },
-        { id: 3, type: 'Manufacturer', name: 'Vedic Pharma Ltd', contact: 'Ms. Patel', email: 'patel@vedicpharma.com', phone: '+91 98765 43212', submittedDate: '2025-12-05' }
+    // Mock pending registrations data with more details
+    const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>([
+        {
+            id: 1,
+            type: 'Laboratory',
+            name: 'AYUSH Quality Labs',
+            contact: 'Dr. Sharma',
+            email: 'sharma@ayushlab.com',
+            phone: '+91 98765 43210',
+            submittedDate: '2025-12-07',
+            nablNumber: 'NABL-123456',
+            address: '123 Lab Street',
+            city: 'Bhopal',
+            state: 'Madhya Pradesh',
+            pincode: '462001'
+        },
+        {
+            id: 2,
+            type: 'Processor',
+            name: 'Herbal Processing Unit',
+            contact: 'Mr. Kumar',
+            email: 'kumar@herbprocess.com',
+            phone: '+91 98765 43211',
+            submittedDate: '2025-12-06',
+            licenseNumber: 'PROC-789012',
+            address: '456 Processing Lane',
+            city: 'Indore',
+            state: 'Madhya Pradesh',
+            pincode: '452001'
+        },
+        {
+            id: 3,
+            type: 'Manufacturer',
+            name: 'Vedic Pharma Ltd',
+            contact: 'Ms. Patel',
+            email: 'patel@vedicpharma.com',
+            phone: '+91 98765 43212',
+            submittedDate: '2025-12-05',
+            fssaiNumber: 'FSSAI-345678',
+            licenseNumber: 'MFG-901234',
+            address: '789 Manufacturing Road',
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            pincode: '400001'
+        }
     ])
 
     const handleApprove = (id: number) => {
@@ -25,18 +83,48 @@ export default function AdminPage() {
             const generatedEmail = registration.email
             const generatedPassword = 'Temp@' + Math.random().toString(36).slice(-8)
 
+            // In a real application, this would send an API request to create the user account
+            // and send credentials via email
             alert(`✅ Approved!\n\nCredentials Generated:\nEmail: ${generatedEmail}\nPassword: ${generatedPassword}\n\nCredentials will be sent to the registered email.`)
 
             // Remove from pending list
             setPendingRegistrations(prev => prev.filter(r => r.id !== id))
+            setSelectedRegistration(null)
         }
     }
 
     const handleReject = (id: number) => {
         if (confirm('Are you sure you want to reject this registration?')) {
             setPendingRegistrations(prev => prev.filter(r => r.id !== id))
+            setSelectedRegistration(null)
             alert('Registration rejected.')
         }
+    }
+
+    // Handle new registration submission
+    const handleNewRegistration = (data: any, type: 'Laboratory' | 'Processor' | 'Manufacturer') => {
+        const newRegistration: PendingRegistration = {
+            id: Date.now(),
+            type: type,
+            name: data.labName || data.processorName || data.manufacturerName,
+            contact: data.contactPerson,
+            email: data.email,
+            phone: data.phone,
+            submittedDate: new Date().toISOString().split('T')[0],
+            nablNumber: data.nablNumber,
+            licenseNumber: data.licenseNumber,
+            fssaiNumber: data.fssaiNumber,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            pincode: data.pincode
+        }
+
+        setPendingRegistrations(prev => [newRegistration, ...prev])
+
+        // Show success message and reset form
+        alert('✅ Registration submitted successfully! It will be reviewed by the admin.')
+        setRegistrationRole('')
     }
 
     const sidebarItems = [
@@ -259,7 +347,10 @@ export default function AdminPage() {
                                 <div className="max-w-6xl mx-auto">
                                     <div className="mb-8">
                                         <button
-                                            onClick={() => setShowApprovals(false)}
+                                            onClick={() => {
+                                                setShowApprovals(false)
+                                                setSelectedRegistration(null)
+                                            }}
                                             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium mb-4"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,58 +370,167 @@ export default function AdminPage() {
                                             <p className="text-gray-500 text-lg font-semibold">No pending registrations</p>
                                             <p className="text-gray-400 text-sm mt-2">All registrations have been processed</p>
                                         </div>
+                                    ) : selectedRegistration ? (
+                                        // Detailed View
+                                        <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden">
+                                            <div className="bg-gradient-to-r from-[#016868] to-[#014d4d] p-6 text-white">
+                                                <button
+                                                    onClick={() => setSelectedRegistration(null)}
+                                                    className="flex items-center gap-2 text-white/80 hover:text-white font-medium mb-4"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                    </svg>
+                                                    Back to List
+                                                </button>
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-full">
+                                                        {selectedRegistration.type}
+                                                    </span>
+                                                    <span className="text-sm text-white/80">
+                                                        Submitted: {selectedRegistration.submittedDate}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-3xl font-bold">{selectedRegistration.name}</h3>
+                                            </div>
+
+                                            <div className="p-8">
+                                                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-lg font-bold text-gray-900 border-b-2 border-[#016868] pb-2">Contact Information</h4>
+                                                        <div>
+                                                            <p className="text-sm text-gray-500 font-semibold">Contact Person</p>
+                                                            <p className="text-gray-900 font-bold">{selectedRegistration.contact}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-gray-500 font-semibold">Email Address</p>
+                                                            <p className="text-gray-900 font-bold">{selectedRegistration.email}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm text-gray-500 font-semibold">Phone Number</p>
+                                                            <p className="text-gray-900 font-bold">{selectedRegistration.phone}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-lg font-bold text-gray-900 border-b-2 border-[#016868] pb-2">Facility Details</h4>
+                                                        {selectedRegistration.nablNumber && (
+                                                            <div>
+                                                                <p className="text-sm text-gray-500 font-semibold">NABL Accreditation Number</p>
+                                                                <p className="text-gray-900 font-bold">{selectedRegistration.nablNumber}</p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRegistration.licenseNumber && (
+                                                            <div>
+                                                                <p className="text-sm text-gray-500 font-semibold">License Number</p>
+                                                                <p className="text-gray-900 font-bold">{selectedRegistration.licenseNumber}</p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRegistration.fssaiNumber && (
+                                                            <div>
+                                                                <p className="text-sm text-gray-500 font-semibold">FSSAI Number</p>
+                                                                <p className="text-gray-900 font-bold">{selectedRegistration.fssaiNumber}</p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRegistration.address && (
+                                                            <div>
+                                                                <p className="text-sm text-gray-500 font-semibold">Address</p>
+                                                                <p className="text-gray-900 font-bold">
+                                                                    {selectedRegistration.address}<br />
+                                                                    {selectedRegistration.city}, {selectedRegistration.state} - {selectedRegistration.pincode}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-4 pt-6 border-t-2 border-gray-200">
+                                                    <button
+                                                        onClick={() => handleApprove(selectedRegistration.id)}
+                                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                                                    >
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Approve & Generate Credentials
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleReject(selectedRegistration.id)}
+                                                        className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                                                    >
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                        Reject Application
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ) : (
+                                        // List View
                                         <div className="space-y-4">
                                             {pendingRegistrations.map((registration) => (
-                                                <div key={registration.id} className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-teal-300 transition-colors">
+                                                <div key={registration.id} className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-[#016868] hover:shadow-md transition-all">
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-3 mb-3">
-                                                                <span className="px-3 py-1 bg-teal-100 text-teal-800 text-xs font-bold rounded-full">
+                                                                <span className="px-3 py-1 bg-[#016868]/10 text-[#016868] text-xs font-bold rounded-full border-2 border-[#016868]/30">
                                                                     {registration.type}
                                                                 </span>
-                                                                <span className="text-xs text-gray-500">
+                                                                <span className="text-xs text-gray-500 font-semibold">
                                                                     Submitted: {registration.submittedDate}
                                                                 </span>
                                                             </div>
 
-                                                            <h4 className="text-xl font-bold text-gray-900 mb-2">{registration.name}</h4>
+                                                            <h4 className="text-xl font-bold text-gray-900 mb-3">{registration.name}</h4>
 
                                                             <div className="grid grid-cols-3 gap-4 text-sm">
                                                                 <div>
-                                                                    <p className="text-gray-500">Contact Person</p>
-                                                                    <p className="font-semibold text-gray-900">{registration.contact}</p>
+                                                                    <p className="text-gray-500 font-semibold">Contact Person</p>
+                                                                    <p className="font-bold text-gray-900">{registration.contact}</p>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-gray-500">Email</p>
-                                                                    <p className="font-semibold text-gray-900">{registration.email}</p>
+                                                                    <p className="text-gray-500 font-semibold">Email</p>
+                                                                    <p className="font-bold text-gray-900">{registration.email}</p>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-gray-500">Phone</p>
-                                                                    <p className="font-semibold text-gray-900">{registration.phone}</p>
+                                                                    <p className="text-gray-500 font-semibold">Phone</p>
+                                                                    <p className="font-bold text-gray-900">{registration.phone}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex gap-3 ml-6">
+                                                        <div className="flex flex-col gap-2 ml-6">
                                                             <button
-                                                                onClick={() => handleApprove(registration.id)}
-                                                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-lg transition-colors"
+                                                                onClick={() => setSelectedRegistration(registration)}
+                                                                className="flex items-center gap-2 bg-[#016868] hover:bg-[#014d4d] text-white font-bold px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
                                                             >
                                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                 </svg>
-                                                                Approve & Generate Credentials
+                                                                View Details
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleReject(registration.id)}
-                                                                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition-colors"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                                Reject
-                                                            </button>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleApprove(registration.id)}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+                                                                    title="Approve"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleReject(registration.id)}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+                                                                    title="Reject"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
