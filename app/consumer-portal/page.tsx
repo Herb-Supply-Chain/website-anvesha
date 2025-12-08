@@ -232,9 +232,9 @@ Blockchain-Verified Traceability System
     }
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7]">
+        <div className="min-h-screen bg-white">
             {/* Header */}
-            <header className="border-b border-teal-800 py-5 px-6 bg-[#01aeae] sticky top-0 z-50 shadow-md">
+            <header className="border-b border-teal-800 py-5 px-6 bg-[#014848] sticky top-0 z-50 shadow-md">
                 <div className="max-w-6xl mx-auto">
                     <Link href="/" className="inline-flex items-center gap-2 text-teal-50 hover:text-white transition-colors text-sm font-medium">
                         <span>←</span>
@@ -275,7 +275,7 @@ Blockchain-Verified Traceability System
                                     <button
                                         onClick={handleVerify}
                                         disabled={!phoneNumber}
-                                        className="bg-[#01aeae] hover:bg-[#065F46] text-white py-3.5 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#064E3B]/20"
+                                        className="bg-[#014848] hover:bg-[#065F46] text-white py-3.5 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#064E3B]/20"
                                     >
                                         Verify
                                     </button>
@@ -375,8 +375,8 @@ Blockchain-Verified Traceability System
                                 <button
                                     onClick={() => setActiveTab('origin')}
                                     className={`flex-1 px-6 py-5 font-medium transition-all whitespace-nowrap text-sm tracking-wide ${activeTab === 'origin'
-                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#01aeae]/5'
-                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#01aeae]/5'
+                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#014848]/5'
+                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#014848]/5'
                                         }`}
                                 >
                                     Origin & GPS
@@ -384,8 +384,8 @@ Blockchain-Verified Traceability System
                                 <button
                                     onClick={() => setActiveTab('lab')}
                                     className={`flex-1 px-6 py-5 font-medium transition-all whitespace-nowrap text-sm tracking-wide ${activeTab === 'lab'
-                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#01aeae]/5'
-                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#01aeae]/5'
+                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#014848]/5'
+                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#014848]/5'
                                         }`}
                                 >
                                     Lab Reports
@@ -393,8 +393,8 @@ Blockchain-Verified Traceability System
                                 <button
                                     onClick={() => setActiveTab('sustainability')}
                                     className={`flex-1 px-6 py-5 font-medium transition-all whitespace-nowrap text-sm tracking-wide ${activeTab === 'sustainability'
-                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#01aeae]/5'
-                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#01aeae]/5'
+                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#014848]/5'
+                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#014848]/5'
                                         }`}
                                 >
                                     Sustainability
@@ -402,8 +402,8 @@ Blockchain-Verified Traceability System
                                 <button
                                     onClick={() => setActiveTab('journey')}
                                     className={`flex-1 px-6 py-5 font-medium transition-all whitespace-nowrap text-sm tracking-wide ${activeTab === 'journey'
-                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#01aeae]/5'
-                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#01aeae]/5'
+                                        ? 'text-[#064E3B] border-b-2 border-[#064E3B] bg-[#014848]/5'
+                                        : 'text-[#57534E] hover:text-[#064E3B] hover:bg-[#014848]/5'
                                         }`}
                                 >
                                     Supply Chain
@@ -442,7 +442,7 @@ Blockchain-Verified Traceability System
                                                     </div>
                                                 </div>
 
-                                                <div className="bg-[#01aeae]/5 border border-[#064E3B]/20 p-6 rounded-xl">
+                                                <div className="bg-[#014848]/5 border border-[#064E3B]/20 p-6 rounded-xl">
                                                     <h4 className="font-semibold text-[#064E3B] mb-4 text-lg">GPS Coordinates</h4>
                                                     <div className="space-y-3 text-[#1C1917] mb-4">
                                                         <div className="flex justify-between">
@@ -454,7 +454,7 @@ Blockchain-Verified Traceability System
                                                             <span className="font-mono font-medium">{productData.origin.longitude}°E</span>
                                                         </div>
                                                     </div>
-                                                    <div className="inline-flex items-center gap-2 bg-[#01aeae]/10 text-[#064E3B] px-4 py-2 rounded-lg text-sm font-medium border border-[#064E3B]/20">
+                                                    <div className="inline-flex items-center gap-2 bg-[#014848]/10 text-[#064E3B] px-4 py-2 rounded-lg text-sm font-medium border border-[#064E3B]/20">
                                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                         </svg>
@@ -496,7 +496,7 @@ Blockchain-Verified Traceability System
                                                             <div className="flex items-center gap-4 flex-wrap">
                                                                 <span className="text-sm text-[#878481]">{report.date}</span>
                                                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${report.status === 'Passed' || report.status === 'Verified'
-                                                                    ? 'bg-[#01aeae]/10 text-[#064E3B] border border-[#064E3B]/20'
+                                                                    ? 'bg-[#014848]/10 text-[#064E3B] border border-[#064E3B]/20'
                                                                     : 'bg-yellow-100 text-yellow-800'
                                                                     }`}>
                                                                     {report.status}
@@ -505,7 +505,7 @@ Blockchain-Verified Traceability System
                                                         </div>
                                                         <button
                                                             onClick={() => handleDownloadReport(report)}
-                                                            className="bg-[#1C1917] hover:bg-[#01aeae] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-black/5"
+                                                            className="bg-[#1C1917] hover:bg-[#014848] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-black/5"
                                                         >
                                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -579,7 +579,7 @@ Blockchain-Verified Traceability System
                                                 <div key={index} className="flex gap-6 mb-6 last:mb-0">
                                                     {/* Timeline */}
                                                     <div className="flex flex-col items-center">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white text-sm shadow-md ${stage.status === 'Completed' ? 'bg-[#01aeae] ring-4 ring-[#064E3B]/10' : 'bg-[#1E40AF] ring-4 ring-[#1E40AF]/10'
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white text-sm shadow-md ${stage.status === 'Completed' ? 'bg-[#014848] ring-4 ring-[#064E3B]/10' : 'bg-[#1E40AF] ring-4 ring-[#1E40AF]/10'
                                                             }`}>
                                                             {index + 1}
                                                         </div>
@@ -596,7 +596,7 @@ Blockchain-Verified Traceability System
                                                                 <p className="text-[#57534E]">{stage.location}</p>
                                                             </div>
                                                             <span className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap border ${stage.status === 'Completed'
-                                                                ? 'bg-[#01aeae]/10 text-[#064E3B] border-[#064E3B]/20'
+                                                                ? 'bg-[#014848]/10 text-[#064E3B] border-[#064E3B]/20'
                                                                 : 'bg-blue-100 text-blue-800 border-blue-200'
                                                                 }`}>
                                                                 {stage.status}
@@ -612,7 +612,7 @@ Blockchain-Verified Traceability System
                                             ))}
                                         </div>
 
-                                        <div className="bg-[#01aeae]/5 border border-[#064E3B]/20 p-6 rounded-xl">
+                                        <div className="bg-[#014848]/5 border border-[#064E3B]/20 p-6 rounded-xl">
                                             <div className="flex items-center justify-center gap-3 text-[#1C1917]">
                                                 <svg className="w-5 h-5 text-[#064E3B]" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -631,4 +631,5 @@ Blockchain-Verified Traceability System
         </div>
     )
 }
+
 

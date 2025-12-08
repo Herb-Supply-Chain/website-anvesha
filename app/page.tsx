@@ -210,29 +210,49 @@ export default function LandingPage() {
 
     const processSteps = [
         {
-            icon: '1',
-            title: 'Geo-Tagged Collection',
-            description: 'GPS-verified harvesting with collector identity and timestamp'
+            icon: (
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            title: 'Source Verification',
+            description: 'Geo-tagged harvesting at origin with farmer identity verification and sustainable practice compliance checks.'
         },
         {
-            icon: '2',
-            title: 'Laboratory Testing',
-            description: 'Quality analysis for moisture, pesticides, and DNA authentication'
+            icon: (
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+            ),
+            title: 'Quality Analysis',
+            description: 'Rigorous NABL-accredited laboratory testing for active principles, pesticide residues, and heavy metals.'
         },
         {
-            icon: '3',
-            title: 'Processing & Storage',
-            description: 'Controlled drying, grinding, and storage with condition monitoring'
+            icon: (
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            ),
+            title: 'Standardized Processing',
+            description: 'GMP-compliant processing and storage with continuous environmental monitoring to preserve potency.'
         },
         {
-            icon: '4',
-            title: 'Smart Packaging',
-            description: 'Blockchain-generated QR codes for end-to-end traceability'
+            icon: (
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            ),
+            title: 'Digital Certification',
+            description: 'Immutable blockchain records generated at every step, creating a tamper-proof certificate of analysis.'
         },
         {
-            icon: '5',
-            title: 'Consumer Verification',
-            description: 'Scan QR codes to view complete provenance and quality certificates'
+            icon: (
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            title: 'Consumer Validation',
+            description: 'End-users verify product authenticity and provenance details instantly via secure QR code scanning.'
         }
     ]
 
@@ -253,7 +273,7 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Navigation */}
-            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#01aeae]'
+            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#014848]'
                 } `}>
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
@@ -299,10 +319,19 @@ export default function LandingPage() {
                     </div>
                 </div>
             </nav>
-
             {/* Hero Section - New Design */}
-            <section className="relative min-h-screen bg-white pt-20">
-                <div className="max-w-7xl mx-auto px-6 py-20">
+            <section className="relative min-h-screen bg-white pt-20 overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute top-0 left-0 w-full lg:w-1/2 h-full opacity-10 pointer-events-none select-none z-0 flex items-center justify-center">
+                    <img
+                        src="/pixel-tree.png"
+                        alt=""
+                        className="w-[2100px] h-[2100px] object-contain grayscale translate-x-72"
+                        aria-hidden="true"
+                    />
+                </div>
+
+                <div className="max-w-7xl mx-auto px-6 py-20 relative z-10">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
                         {/* Left Side - Branding */}
                         <div className="space-y-8">
@@ -321,26 +350,10 @@ export default function LandingPage() {
                                 </p>
                             </div>
 
-                            {/* Key Metrics */}
-                            <div className="grid grid-cols-3 gap-12 mt-8">
-                                <div className="text-center">
-                                    <div className="text-5xl font-bold text-teal-600 mb-2">100%</div>
-                                    <div className="text-sm text-gray-600 font-medium">Traceable</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-5xl font-bold text-teal-600 mb-2">24/7</div>
-                                    <div className="text-sm text-gray-600 font-medium">Monitoring</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-5xl font-bold text-teal-600 mb-2">Secure</div>
-                                    <div className="text-sm text-gray-600 font-medium">Blockchain</div>
-                                </div>
-                            </div>
-
                             {/* Action Buttons */}
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 mt-12">
                                 <Link href="/consumer-portal">
-                                    <button className="bg-[#01aeae] hover:bg-[#019999] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                                    <button className="bg-[#014848] hover:bg-[#013636] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
 
                                         <span>Verify Product</span>
                                     </button>
@@ -361,11 +374,11 @@ export default function LandingPage() {
                 </div>
 
                 {/* Decorative Elements */}
-                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent"></div>
+                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent z-20"></div>
             </section>
 
             {/* Key Initiatives */}
-            <section className="py-20 px-6 bg-white">
+            < section className="py-20 px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
@@ -389,31 +402,59 @@ export default function LandingPage() {
                             </div>
                         ))}
                     </div>
-                </div >
+                </div>
             </section >
 
             {/* Process Flow */}
-            < section className="py-20 px-6 bg-gradient-to-br from-gray-50 to-teal-50" >
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
-                            Process Flow
-                        </h3>
-                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">End-to-end journey from farm to consumer</p>
-                    </div>
-                    <div className="relative">
-                        {/* Connection Line */}
-                        <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 via-blue-400 to-purple-400 transform -translate-y-1/2 z-0"></div>
+            < section className="py-24 px-6 bg-gradient-to-br from-teal-50/50 to-white relative overflow-hidden" >
+                {/* Background Pattern */}
+                < div className="absolute inset-0 opacity-5 pointer-events-none" >
+                    <div className="absolute top-0 left-0 w-64 h-64 bg-teal-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+                </div >
 
-                        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-8 relative z-10">
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="text-center mb-20">
+                        <span className="text-teal-600 font-semibold tracking-wider text-sm uppercase mb-3 block">From Farm to Consumer</span>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-6">
+                            Verified Supply Chain
+                        </h3>
+                        <div className="h-1.5 w-24 bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mx-auto mb-8"></div>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">
+                            A completely transparent, blockchain-secured journey ensuring every herb's authenticity and quality.
+                        </p>
+                    </div>
+
+                    <div className="relative">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="hidden lg:block absolute top-12 left-0 right-0 h-1 bg-gray-200 -z-10 rounded-full">
+                            <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-teal-500 via-teal-400 to-teal-500 w-full animate-shimmer bg-[length:200%_100%]"></div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 relative">
                             {processSteps.map((step, index) => (
-                                <div key={index} className="flex flex-col items-center text-center group">
-                                    <div className="w-20 h-20 bg-white rounded-full shadow-xl flex items-center justify-center mb-4 border-4 border-teal-500 transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-2xl">
-                                        <span className="text-2xl font-bold text-teal-600">{step.icon}</span>
+                                <div key={index} className="group relative flex flex-col items-center">
+                                    {/* Step Number Badge */}
+                                    <div className="absolute -top-12 opacity-10 font-[1000] text-6xl text-teal-900 select-none group-hover:opacity-20 transition-opacity">
+                                        {index + 1}
                                     </div>
-                                    <h4 className="font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors font-playfair text-base">{step.title}</h4>
-                                    <p className="text-sm text-gray-600 leading-relaxed">{step.description}</p>
+
+                                    {/* Icon Container */}
+                                    <div className="w-24 h-24 bg-white rounded-full shadow-lg border-4 border-white flex items-center justify-center mb-6 relative z-10 group-hover:border-teal-500 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                                        <div className="text-teal-600 group-hover:text-teal-700 transition-colors">
+                                            {step.icon}
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="text-center px-2">
+                                        <h4 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-teal-700 transition-colors font-playfair">
+                                            {step.title}
+                                        </h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed group-hover:text-gray-700 transition-colors">
+                                            {step.description}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -447,7 +488,7 @@ export default function LandingPage() {
             </section >
 
             {/* Pilot Impact */}
-            <section className="py-20 px-6 bg-white">
+            < section className="py-20 px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">Pilot Impact</h3>
@@ -476,10 +517,10 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* Footer */}
-            <footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6">
+            < footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6" >
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-4 gap-8 mb-8">
                         <div>
@@ -529,8 +570,9 @@ export default function LandingPage() {
                         🪶 By CrackedDevs.
                     </div>
                 </div>
-            </footer>
+            </footer >
         </div >
     )
 }
+
 

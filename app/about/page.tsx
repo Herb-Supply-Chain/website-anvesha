@@ -7,7 +7,7 @@ export default function AboutPage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-50 bg-[#01aeae] shadow-md">
+            <nav className="fixed top-0 w-full z-50 bg-[#014848] shadow-md">
                 <div className="max-w-7xl mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -130,4 +130,5 @@ export default function AboutPage() {
         </div>
     )
 }
+
 
