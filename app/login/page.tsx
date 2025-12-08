@@ -35,29 +35,30 @@ export default function LoginPage() {
             const result = await AuthService.login(email, password)
 
             if (result.success && result.user) {
-                // Validate role matches
-                if (result.user.role !== role) {
-                    setError('Invalid role selected for this user')
-                    setIsLoading(false)
-                    return
-                }
-
-                // Redirect based on role
-                if (result.user.role === 'Admin') {
-                    router.push('/admin')
-                } else {
-                    // For now, other users go to dashboard (or back to home if dashboard not implemented completely)
-                    // Ideally this would be dynamic based on role like /dashboard/processor etc.
-                    router.push('/')
-                    // Showing alert for demo since we haven't built specific dashboards
-                    setTimeout(() => alert(`Welcome back, ${result.user?.name}! Login successful.`), 500)
+                // Redirect based on role from API response
+                switch (result.user.role) {
+                    case 'Admin':
+                        router.push('/admin')
+                        break
+                    case 'Lab QA':
+                        router.push('/lab')
+                        break
+                    case 'Processor':
+                        router.push('/processor')
+                        break
+                    case 'Manufacturer':
+                        router.push('/manufacturing')
+                        break
+                    default:
+                        router.push('/')
                 }
             } else {
-                setError(result.message)
+                setError(result.message || 'Login failed. Please try again.')
                 setIsLoading(false)
             }
         } catch (err) {
-            setError('An unexpected error occurred.')
+            console.error('Login error:', err)
+            setError('An unexpected error occurred. Please try again.')
             setIsLoading(false)
         }
     }
@@ -153,24 +154,7 @@ export default function LoginPage() {
                             'Sign In'
                         )}
                     </button>
-
-                    {/* Admin Shortcut Hint (For verification convenience) */}
-                    <div className="text-center">
-                        <p className="text-xs text-gray-600 mt-2">
-                            (Demo Admin: admin@ayush.gov.in / admin123)
-                        </p>
-                    </div>
                 </form>
-
-                {/* Footer Links */}
-                <div className="mt-6 text-center">
-                    <p className="text-gray-400 text-sm">
-                        Don't have an account?{' '}
-                        <Link href="/register" className="text-teal-500 hover:text-teal-400 font-medium">
-                            Register here
-                        </Link>
-                    </p>
-                </div>
             </div>
         </div>
     )

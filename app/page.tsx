@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AuthService } from '@/lib/auth-service'
 
 interface LoginCardProps {
     language: 'en' | 'hi'
@@ -21,32 +20,91 @@ function LoginCard({ language, t }: LoginCardProps) {
         e.preventDefault()
         setError('')
         setIsLoading(true)
+
         try {
-            const result = await AuthService.login(email, password)
-            if (result.success && result.user) {
-                if (result.user.role === 'Admin') router.push('/admin')
-                else if (result.user.role === 'Lab QA') router.push('/lab')
-                else router.push('/processor')
+            const response = await fetch('http://192.168.50.154:3000/api/auth/email/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data) {
+                // Store token if available
+                console.log('Login response:', data)
+                const token = data.data?.token || data.token
+                
+                if (token) {
+                    // Set cookie with proper encoding and attributes
+                    const expires = new Date()
+                    expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
+                    
+                    document.cookie = `jwt_token=${encodeURIComponent(token)}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`
+                    
+                    // Also store in localStorage as backup
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('jwt_token', token)
+                    }
+                    
+                    console.log('✅ Token stored in cookie and localStorage')
+                } else {
+                    console.warn('⚠️ No token found in response:', data)
+                }
+
+                // Get user role - check multiple possible locations and formats
+                const userRole = data.user?.role || data.role || data.data?.user?.role || 'Admin'
+                const roleUpper = userRole.toUpperCase()
+                
+                console.log('User role detected:', userRole, 'Normalized:', roleUpper)
+
+                // Redirect based on role
+                let redirectPath = '/'
+                
+                if (roleUpper === 'ADMIN' || roleUpper === 'ADMINISTRATOR') {
+                    redirectPath = '/admin'
+                } else if (roleUpper === 'LAB' || roleUpper === 'LAB QA' || roleUpper === 'LABORATORY') {
+                    redirectPath = '/lab'
+                } else if (roleUpper === 'PROCESSOR') {
+                    redirectPath = '/processor'
+                } else if (roleUpper === 'MANUFACTURER' || roleUpper === 'MANUFACTURING') {
+                    redirectPath = '/manufacturing'
+                }
+                
+                console.log('Redirecting to:', redirectPath)
+                
+                // Use both router.push and window.location as fallback
+                setIsLoading(false)
+                router.push(redirectPath)
+                
+                // Fallback redirect after a short delay
+                setTimeout(() => {
+                    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                        window.location.href = redirectPath
+                    }
+                }, 100)
             } else {
-                setError(result.message)
+                setError(data?.message || 'Login failed. Please check your credentials.')
                 setIsLoading(false)
             }
         } catch (err) {
-            setError('An error occurred')
+            setError('Unable to connect to server. Please try again.')
             setIsLoading(false)
         }
     }
 
     return (
-        <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border border-gray-200 hover:shadow-3xl transition-shadow duration-300">
-            <div className="text-center mb-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 w-full max-w-md border border-gray-200 hover:shadow-3xl transition-shadow duration-300">
+            <div className="text-center mb-6 sm:mb-8">
                 <div className="flex justify-center mb-4">
-                    <div className="w-20 h-20 bg-white rounded-xl p-2 shadow-lg">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-xl p-2 shadow-lg">
                         <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
                     </div>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">{t[language].govtLogin}</h3>
-                <p className="text-sm text-gray-500">{t[language].authorizedOnly}</p>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{t[language].govtLogin}</h3>
+                <p className="text-xs sm:text-sm text-gray-500">{t[language].authorizedOnly}</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -95,21 +153,6 @@ function LoginCard({ language, t }: LoginCardProps) {
                         </span>
                     ) : t[language].signIn}
                 </button>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                        <p className="text-xs text-center text-blue-800 font-medium mb-2">
-                            {t[language].securePortal}
-                        </p>
-                        <div className="text-xs text-gray-700 space-y-1">
-                            <p className="font-semibold text-center mb-2">Demo Credentials:</p>
-                            <p className="text-center"><strong>Admin:</strong> admin@ayush.gov.in / admin123</p>
-                            <p className="text-center"><strong>Lab:</strong> lab@ayush.gov.in / lab123</p>
-                            <p className="text-center"><strong>Processor:</strong> processor@ayush.gov.in / processor123</p>
-                            <p className="text-center"><strong>Manufacturer:</strong> manufacturer@ayush.gov.in / manufacturer123</p>
-                        </div>
-                    </div>
-                </div>
             </form>
         </div>
     )
@@ -441,28 +484,34 @@ export default function LandingPage() {
             {/* Navigation */}
             <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#014848]'
                 } `}>
-                <div className="max-w-7xl mx-auto px-6 py-3">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-white rounded-xl p-1 shadow-md">
+                        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-md">
                                 <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
                             </div>
-                            <div>
-                                <h1 className={`text-sm font-bold transition-colors ${scrolled ? 'text-gray-800' : 'text-white'
+                            <div className="hidden sm:block">
+                                <h1 className={`text-xs sm:text-sm font-bold transition-colors ${scrolled ? 'text-gray-800' : 'text-white'
                                     } `}>
                                     Government of India | भारत सरकार
                                 </h1>
-                                <p className={`text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
+                                <p className={`text-[10px] sm:text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
                                     } `}>
                                     Ministry of AYUSH | आयुष मंत्रालय
                                 </p>
-                                <p className={`text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
+                                <p className={`text-[10px] sm:text-xs font-medium transition-colors ${scrolled ? 'text-gray-600' : 'text-white/90'
                                     } `}>
                                     ANVESHA | अन्वेषा
                                 </p>
                             </div>
+                            <div className="sm:hidden">
+                                <h1 className={`text-xs font-bold transition-colors ${scrolled ? 'text-gray-800' : 'text-white'
+                                    } `}>
+                                    ANVESHA
+                                </h1>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={() => setLanguage('en')}
                                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-all hover:scale-105 ${language === 'en'
@@ -497,35 +546,35 @@ export default function LandingPage() {
                     />
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 py-20 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
                         {/* Left Side - Branding */}
-                        <div className="space-y-8">
+                        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
 
 
                             {/* ANVESHA Title */}
-                            <div className="space-y-4">
-                                <h1 className="text-6xl lg:text-7xl font-bold text-teal-600 tracking-wide">
+                            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-teal-600 tracking-wide">
                                     {t[language].heroTitle}
                                 </h1>
-                                <h2 className="text-3xl lg:text-4xl font-bold text-teal-800">
+                                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-teal-800">
                                     {t[language].heroSubtitle}
                                 </h2>
-                                <p className="text-lg text-gray-700 leading-relaxed max-w-2xl">
+                                <p className="text-base sm:text-lg text-gray-700 leading-relaxed max-w-2xl">
                                     {t[language].tagline}
                                 </p>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-4 mt-12">
-                                <Link href="/consumer-portal">
-                                    <button className="bg-[#014848] hover:bg-[#013636] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 lg:mt-12">
+                                <Link href="/consumer-portal" className="w-full sm:w-auto">
+                                    <button className="w-full sm:w-auto bg-[#014848] hover:bg-[#013636] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base">
                                         <span>{t[language].verifyProduct}</span>
                                     </button>
                                 </Link>
-                                <Link href="/contact">
-                                    <button className="bg-white hover:bg-gray-50 text-teal-700 px-8 py-4 rounded-lg font-semibold border-2 border-teal-600 transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
-                                        <span>{t[language].contactUs}</span>
+                                <Link href="/register" className="w-full sm:w-auto">
+                                    <button className="w-full sm:w-auto bg-white hover:bg-gray-50 text-teal-700 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold border-2 border-teal-600 transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base">
+                                        <span>{t[language].navRegister}</span>
                                     </button>
                                 </Link>
                             </div>

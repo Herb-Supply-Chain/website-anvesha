@@ -1,64 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-interface SampleData {
-    sampleId: string
-    sourceFarm: string
-    herb: string
-    quantityReceived: string
-    priority: 'HIGH' | 'MEDIUM' | 'LOW'
-}
-
-interface TestData {
-    // Physical & Organoleptic Tests
-    moistureContent: string
-    colorCheck: string
-    odorCheck: string
-    foreignMatter: string
-
-    // Chemical Analysis
-    lead: string
-    arsenic: string
-    cadmium: string
-    mercury: string
-    pesticides: string
-    aflatoxin: string
-
-    // Microbial Analysis
-    totalBacterialCount: string
-    yeastMold: string
-    salmonella: string
-    ecoli: string
-
-    // Advanced Tests
-    dnaBarcoding: string
-    hplcAnalysis: string
-    tlcFingerprinting: string
-    withanolides: string
-
-    // Quality Assessment
-    overallGrade: string
-    ayushCompliance: string
-    fssaiCompliance: string
-    remarks: string
-    technicianName: string
-}
 
 export default function LabTestingPage() {
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState('physical')
-
-    const [sampleData, setSampleData] = useState<SampleData>({
-        sampleId: 'LAB-2024-ASH-001',
-        sourceFarm: 'FARM-2024-ASH-001',
-        herb: 'Ashwagandha Root',
-        quantityReceived: '600g',
-        priority: 'HIGH'
-    })
-
-    const [testData, setTestData] = useState<TestData>({
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [formData, setFormData] = useState({
+        batchId: '',
         moistureContent: '',
         colorCheck: '',
         odorCheck: '',
@@ -73,403 +22,469 @@ export default function LabTestingPage() {
         yeastMold: '',
         salmonella: '',
         ecoli: '',
-        dnaBarcoding: '',
-        hplcAnalysis: '',
-        tlcFingerprinting: '',
-        withanolides: '',
-        overallGrade: '',
-        ayushCompliance: '',
-        fssaiCompliance: '',
-        remarks: '',
-        technicianName: ''
+        technicianName: '',
+        remarks: ''
     })
+    const [formErrors, setFormErrors] = useState({
+        batchId: ''
+    })
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const tabs = [
-        { id: 'physical', label: 'Physical & Organoleptic', icon: '🔬' },
-        { id: 'chemical', label: 'Chemical Analysis', icon: '⚗️' },
-        { id: 'microbial', label: 'Microbial Analysis', icon: '🦠' },
-        { id: 'advanced', label: 'Advanced Tests', icon: '🧬' },
-        { id: 'quality', label: 'Quality Assessment', icon: '✓' }
-    ]
+    // Check authentication on mount
+    useEffect(() => {
+        const checkAuth = () => {
+            if (typeof document === 'undefined') return false
+            
+            // Check cookies (handle encoded values)
+            const cookies = document.cookie.split(';')
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=')
+                if (name === 'jwt_token') {
+                    try {
+                        const decoded = decodeURIComponent(value || '')
+                        if (decoded && decoded.trim() !== '') {
+                            return true
+                        }
+                    } catch {
+                        if (value && value.trim() !== '') {
+                            return true
+                        }
+                    }
+                }
+            }
+            
+            // Check localStorage
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('jwt_token')
+                if (token && token.trim() !== '') {
+                    return true
+                }
+            }
+            
+            return false
+        }
 
-    const handleInputChange = (field: keyof TestData, value: string) => {
-        setTestData({ ...testData, [field]: value })
+        const authenticated = checkAuth()
+        setIsAuthenticated(authenticated)
+
+        // If not authenticated, redirect to login
+        if (!authenticated) {
+            router.push('/')
+        }
+    }, [router])
+
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }))
+        // Clear error when user starts typing
+        if (formErrors[name as keyof typeof formErrors]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }))
+        }
     }
 
-    const handleGenerateCertificate = async () => {
-        if (!testData.overallGrade || !testData.technicianName) {
-            alert('Please complete quality assessment before generating certificate')
+    const validateForm = () => {
+        const errors = {
+            batchId: ''
+        }
+        let isValid = true
+
+        if (!formData.batchId.trim()) {
+            errors.batchId = 'Batch ID is required'
+            isValid = false
+        }
+
+        setFormErrors(errors)
+        return isValid
+    }
+
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        
+        if (!validateForm()) {
             return
         }
-        alert('Certificate generated successfully!')
+
+        setIsSubmitting(true)
+        try {
+            // TODO: Make API call here
+            console.log('Lab test data:', formData)
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            
+            alert('✅ Lab test data submitted successfully!')
+            setFormData({
+                batchId: '',
+                moistureContent: '',
+                colorCheck: '',
+                odorCheck: '',
+                foreignMatter: '',
+                lead: '',
+                arsenic: '',
+                cadmium: '',
+                mercury: '',
+                pesticides: '',
+                aflatoxin: '',
+                totalBacterialCount: '',
+                yeastMold: '',
+                salmonella: '',
+                ecoli: '',
+                technicianName: '',
+                remarks: ''
+            })
+        } catch (error) {
+            console.error('Error submitting form:', error)
+            alert('Error submitting lab test data. Please try again.')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center font-inter">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-medium">Checking authentication...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-['Inter',sans-serif]">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50/20 font-inter">
             {/* Header */}
-            <header className="bg-[#176a6a] shadow-md">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center">
-                                <img src="/logo.png" alt="ANVESHA" className="w-full h-full object-contain" />
+            <div className="bg-gradient-to-r from-[#014848] to-[#016868] text-white shadow-lg">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-lg">
+                                <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-white">ANVESHA Laboratory</h1>
-                                <p className="text-sm text-teal-100">Quality Assurance & Testing</p>
+                            <div className="hidden sm:block">
+                                <h1 className="text-sm sm:text-base lg:text-xl font-bold">Government of India | भारत सरकार</h1>
+                                <p className="text-xs sm:text-sm text-teal-100">Ministry of AYUSH | आयुष मंत्रालय</p>
+                                <p className="text-xs sm:text-sm text-teal-100 font-semibold">ANVESHA Laboratory | अन्वेषा</p>
+                            </div>
+                            <div className="sm:hidden">
+                                <h1 className="text-sm font-bold">ANVESHA Lab</h1>
                             </div>
                         </div>
                         <button
                             onClick={() => router.push('/')}
-                            className="px-4 py-2 text-sm font-semibold text-white hover:text-teal-100 transition-colors"
+                            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 lg:px-6 rounded-lg border border-white/20 hover:border-white/40 transition-all shadow-sm hover:shadow-md flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                         >
-                            Logout
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span className="hidden sm:inline">Logout</span>
                         </button>
                     </div>
                 </div>
-            </header>
+            </div>
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Sample Information Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="text-[#176a6a]">📋</span>
-                        Sample Information
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <div className="space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sample ID</div>
-                            <div className="text-base font-bold text-[#176a6a]">{sampleData.sampleId}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Source Farm</div>
-                            <div className="text-base font-semibold text-gray-900">{sampleData.sourceFarm}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Herb</div>
-                            <div className="text-base font-semibold text-gray-900">{sampleData.herb}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quantity</div>
-                            <div className="text-base font-semibold text-gray-900">{sampleData.quantityReceived}</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</div>
-                            <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${sampleData.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
-                                sampleData.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-green-100 text-green-700'
-                                }`}>
-                                {sampleData.priority}
-                            </span>
-                        </div>
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16">
+                {/* Header Section */}
+                <div className="text-center mb-8 sm:mb-12">
+                    <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-teal-100 to-teal-200 rounded-2xl mb-4 sm:mb-6 shadow-lg">
+                        <svg className="w-10 h-10 sm:w-12 sm:h-12 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
                     </div>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
+                        Laboratory Testing Form
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                        Enter comprehensive lab test information for quality assurance and compliance
+                    </p>
                 </div>
 
-                {/* Testing Form */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="bg-gradient-to-r from-[#176a6a] to-[#1a7d7d] px-6 py-4">
-                        <h2 className="text-xl font-bold text-white">
-                            Testing Form - {sampleData.sampleId}
-                        </h2>
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex-1 min-w-[180px] px-6 py-4 font-semibold text-sm transition-all ${activeTab === tab.id
-                                    ? 'bg-white text-[#176a6a] border-b-2 border-[#176a6a]'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <span className="mr-2">{tab.icon}</span>
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="p-8">
-                        {/* Physical & Organoleptic Tests */}
-                        {activeTab === 'physical' && (
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-gray-900 text-lg border-b border-gray-200 pb-2">Physical & Organoleptic Tests</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Moisture Content (%)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.moistureContent}
-                                            onChange={(e) => handleInputChange('moistureContent', e.target.value)}
-                                            placeholder="Enter moisture content"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Standard range: 5-10%</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Color Check
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.colorCheck}
-                                            onChange={(e) => handleInputChange('colorCheck', e.target.value)}
-                                            placeholder="Enter observed color"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Expected: Light brown to brown</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Odor Check
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.odorCheck}
-                                            onChange={(e) => handleInputChange('odorCheck', e.target.value)}
-                                            placeholder="Describe odor characteristics"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Expected: Characteristic earthy odor</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Foreign Matter (%)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.foreignMatter}
-                                            onChange={(e) => handleInputChange('foreignMatter', e.target.value)}
-                                            placeholder="Enter foreign matter percentage"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Maximum limit: 2%</p>
-                                    </div>
-                                </div>
+                {/* Lab Testing Form */}
+                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                    {/* Form Header */}
+                    <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 sm:px-8 py-6 sm:py-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
                             </div>
-                        )}
+                            <div>
+                                <h3 className="text-xl sm:text-2xl font-bold text-white">Test Documentation</h3>
+                                <p className="text-sm text-teal-100 mt-1">Complete all required fields for accurate testing records</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleFormSubmit} className="p-6 sm:p-8 lg:p-10 space-y-8">
+                        {/* Batch ID Section */}
+                        <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 sm:p-8 border-2 border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Batch Information</h3>
+                            </div>
+                            <div>
+                                <label htmlFor="batchId" className="block text-sm font-semibold text-gray-900 mb-3">
+                                    Batch ID <span className="text-red-500 font-bold">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="batchId"
+                                    name="batchId"
+                                    value={formData.batchId}
+                                    onChange={handleFormChange}
+                                    className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                        formErrors.batchId
+                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                            : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                    }`}
+                                    placeholder="Enter batch ID (e.g., BATCH-2024-001)"
+                                />
+                                {formErrors.batchId && (
+                                    <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {formErrors.batchId}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Physical & Organoleptic Tests */}
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Physical & Organoleptic Tests</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                                {[
+                                    { id: 'moistureContent', label: 'Moisture Content (%)', placeholder: 'Enter moisture content', hint: 'Standard range: 5-10%' },
+                                    { id: 'colorCheck', label: 'Color Check', placeholder: 'Enter observed color', hint: 'Expected: Light brown to brown' },
+                                    { id: 'odorCheck', label: 'Odor Check', placeholder: 'Describe odor characteristics', hint: 'Expected: Characteristic earthy odor' },
+                                    { id: 'foreignMatter', label: 'Foreign Matter (%)', placeholder: 'Enter foreign matter percentage', hint: 'Maximum limit: 2%' }
+                                ].map((field) => (
+                                    <div key={field.id} className="space-y-2">
+                                        <label htmlFor={field.id} className="block text-sm font-semibold text-gray-900">
+                                            {field.label}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id={field.id}
+                                            name={field.id}
+                                            value={formData[field.id as keyof typeof formData] as string}
+                                            onChange={handleFormChange}
+                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                            placeholder={field.placeholder}
+                                        />
+                                        <p className="text-xs text-gray-500 font-medium">{field.hint}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
                         {/* Chemical Analysis */}
-                        {activeTab === 'chemical' && (
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-gray-900 text-lg border-b border-gray-200 pb-2">Chemical Analysis</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {[
-                                        { field: 'lead', label: 'Lead (ppm)', limit: '10 ppm' },
-                                        { field: 'arsenic', label: 'Arsenic (ppm)', limit: '3 ppm' },
-                                        { field: 'cadmium', label: 'Cadmium (ppm)', limit: '0.3 ppm' },
-                                        { field: 'mercury', label: 'Mercury (ppm)', limit: '1 ppm' },
-                                        { field: 'pesticides', label: 'Pesticide Residues', limit: 'Below detection limit' },
-                                        { field: 'aflatoxin', label: 'Aflatoxins (ppb)', limit: '20 ppb' }
-                                    ].map((item) => (
-                                        <div key={item.field}>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                {item.label}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={testData[item.field as keyof TestData]}
-                                                onChange={(e) => handleInputChange(item.field as keyof TestData, e.target.value)}
-                                                placeholder={`Enter ${item.label.toLowerCase()}`}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                            />
-                                            <p className="text-xs text-gray-500 mt-1">Maximum limit: {item.limit}</p>
-                                        </div>
-                                    ))}
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+                                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
                                 </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Chemical Analysis</h3>
                             </div>
-                        )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                                {[
+                                    { id: 'lead', label: 'Lead (ppm)', placeholder: 'Enter lead content', hint: 'Maximum limit: 10 ppm' },
+                                    { id: 'arsenic', label: 'Arsenic (ppm)', placeholder: 'Enter arsenic content', hint: 'Maximum limit: 3 ppm' },
+                                    { id: 'cadmium', label: 'Cadmium (ppm)', placeholder: 'Enter cadmium content', hint: 'Maximum limit: 0.3 ppm' },
+                                    { id: 'mercury', label: 'Mercury (ppm)', placeholder: 'Enter mercury content', hint: 'Maximum limit: 1 ppm' },
+                                    { id: 'pesticides', label: 'Pesticide Residues', placeholder: 'Enter pesticide residues', hint: 'Should be below detection limit' },
+                                    { id: 'aflatoxin', label: 'Aflatoxins (ppb)', placeholder: 'Enter aflatoxin content', hint: 'Maximum limit: 20 ppb' }
+                                ].map((field) => (
+                                    <div key={field.id} className="space-y-2">
+                                        <label htmlFor={field.id} className="block text-sm font-semibold text-gray-900">
+                                            {field.label}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id={field.id}
+                                            name={field.id}
+                                            value={formData[field.id as keyof typeof formData] as string}
+                                            onChange={handleFormChange}
+                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                            placeholder={field.placeholder}
+                                        />
+                                        <p className="text-xs text-gray-500 font-medium">{field.hint}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
                         {/* Microbial Analysis */}
-                        {activeTab === 'microbial' && (
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-gray-900 text-lg border-b border-gray-200 pb-2">Microbial Analysis</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Total Bacterial Count (CFU/g)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.totalBacterialCount}
-                                            onChange={(e) => handleInputChange('totalBacterialCount', e.target.value)}
-                                            placeholder="Enter bacterial count"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Maximum limit: 10^5 CFU/g</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Yeast & Mold (CFU/g)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.yeastMold}
-                                            onChange={(e) => handleInputChange('yeastMold', e.target.value)}
-                                            placeholder="Enter yeast & mold count"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Maximum limit: 10^3 CFU/g</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Salmonella
-                                        </label>
-                                        <select
-                                            value={testData.salmonella}
-                                            onChange={(e) => handleInputChange('salmonella', e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        >
-                                            <option value="">Select result</option>
-                                            <option value="Absent">Absent</option>
-                                            <option value="Present">Present</option>
-                                        </select>
-                                        <p className="text-xs text-gray-500 mt-1">Should be absent in 25g</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            E. coli
-                                        </label>
-                                        <select
-                                            value={testData.ecoli}
-                                            onChange={(e) => handleInputChange('ecoli', e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        >
-                                            <option value="">Select result</option>
-                                            <option value="Absent">Absent</option>
-                                            <option value="Present">Present</option>
-                                        </select>
-                                        <p className="text-xs text-gray-500 mt-1">Should be absent in 1g</p>
-                                    </div>
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Microbial Analysis</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                                <div className="space-y-2">
+                                    <label htmlFor="totalBacterialCount" className="block text-sm font-semibold text-gray-900">
+                                        Total Bacterial Count (CFU/g)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="totalBacterialCount"
+                                        name="totalBacterialCount"
+                                        value={formData.totalBacterialCount}
+                                        onChange={handleFormChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                        placeholder="Enter bacterial count"
+                                    />
+                                    <p className="text-xs text-gray-500 font-medium">Maximum limit: 10^5 CFU/g</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="yeastMold" className="block text-sm font-semibold text-gray-900">
+                                        Yeast & Mold (CFU/g)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="yeastMold"
+                                        name="yeastMold"
+                                        value={formData.yeastMold}
+                                        onChange={handleFormChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                        placeholder="Enter yeast & mold count"
+                                    />
+                                    <p className="text-xs text-gray-500 font-medium">Maximum limit: 10^3 CFU/g</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="salmonella" className="block text-sm font-semibold text-gray-900">
+                                        Salmonella
+                                    </label>
+                                    <select
+                                        id="salmonella"
+                                        name="salmonella"
+                                        value={formData.salmonella}
+                                        onChange={handleFormChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                    >
+                                        <option value="">Select result</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Present">Present</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500 font-medium">Should be absent in 25g</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="ecoli" className="block text-sm font-semibold text-gray-900">
+                                        E. coli
+                                    </label>
+                                    <select
+                                        id="ecoli"
+                                        name="ecoli"
+                                        value={formData.ecoli}
+                                        onChange={handleFormChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                    >
+                                        <option value="">Select result</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Present">Present</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500 font-medium">Should be absent in 1g</p>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Advanced Tests */}
-                        {activeTab === 'advanced' && (
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-gray-900 text-lg border-b border-gray-200 pb-2">Advanced Tests</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {[
-                                        { field: 'dnaBarcoding', label: 'DNA Barcoding', hint: 'Species authentication' },
-                                        { field: 'hplcAnalysis', label: 'HPLC Analysis', hint: 'Marker compound analysis' },
-                                        { field: 'tlcFingerprinting', label: 'TLC Fingerprinting', hint: 'Chemical fingerprint' },
-                                        { field: 'withanolides', label: 'Withanolides Content (%)', hint: 'Minimum: 0.3% (for Ashwagandha)' }
-                                    ].map((item) => (
-                                        <div key={item.field}>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                {item.label}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={testData[item.field as keyof TestData]}
-                                                onChange={(e) => handleInputChange(item.field as keyof TestData, e.target.value)}
-                                                placeholder={`Enter ${item.label.toLowerCase()}`}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                            />
-                                            <p className="text-xs text-gray-500 mt-1">{item.hint}</p>
-                                        </div>
-                                    ))}
+                        {/* Additional Information */}
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-100">
+                                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Additional Information</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                                <div className="space-y-2">
+                                    <label htmlFor="technicianName" className="block text-sm font-semibold text-gray-900">
+                                        Technician Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="technicianName"
+                                        name="technicianName"
+                                        value={formData.technicianName}
+                                        onChange={handleFormChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 bg-white hover:border-gray-300"
+                                        placeholder="Enter technician name"
+                                    />
+                                </div>
+                                <div className="sm:col-span-2 space-y-2">
+                                    <label htmlFor="remarks" className="block text-sm font-semibold text-gray-900">
+                                        Remarks / Notes
+                                    </label>
+                                    <textarea
+                                        id="remarks"
+                                        name="remarks"
+                                        value={formData.remarks}
+                                        onChange={handleFormChange}
+                                        rows={4}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 resize-none bg-white hover:border-gray-300"
+                                        placeholder="Enter any additional observations or remarks"
+                                    />
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Quality Assessment */}
-                        {activeTab === 'quality' && (
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-gray-900 text-lg border-b border-gray-200 pb-2">Quality Assessment</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Overall Grade
-                                        </label>
-                                        <select
-                                            value={testData.overallGrade}
-                                            onChange={(e) => handleInputChange('overallGrade', e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        >
-                                            <option value="">Select grade</option>
-                                            <option value="A+">A+ (Premium Quality)</option>
-                                            <option value="A">A (Excellent)</option>
-                                            <option value="B">B (Good)</option>
-                                            <option value="C">C (Acceptable)</option>
-                                            <option value="REJECT">REJECT</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            AYUSH Compliance
-                                        </label>
-                                        <select
-                                            value={testData.ayushCompliance}
-                                            onChange={(e) => handleInputChange('ayushCompliance', e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        >
-                                            <option value="">Select status</option>
-                                            <option value="Compliant">Compliant</option>
-                                            <option value="Non-Compliant">Non-Compliant</option>
-                                            <option value="Pending Review">Pending Review</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            FSSAI Compliance
-                                        </label>
-                                        <select
-                                            value={testData.fssaiCompliance}
-                                            onChange={(e) => handleInputChange('fssaiCompliance', e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        >
-                                            <option value="">Select status</option>
-                                            <option value="Compliant">Compliant</option>
-                                            <option value="Non-Compliant">Non-Compliant</option>
-                                            <option value="Pending Review">Pending Review</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Technician Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={testData.technicianName}
-                                            onChange={(e) => handleInputChange('technicianName', e.target.value)}
-                                            placeholder="Enter technician name"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Remarks / Notes
-                                        </label>
-                                        <textarea
-                                            value={testData.remarks}
-                                            onChange={(e) => handleInputChange('remarks', e.target.value)}
-                                            placeholder="Enter any additional observations or remarks"
-                                            rows={4}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#176a6a] focus:ring-2 focus:ring-[#176a6a]/20 outline-none transition-all text-black font-semibold"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Generate Certificate Button */}
-                        <div className="mt-8 pt-6 border-t border-gray-200">
+                        {/* Submit Button */}
+                        <div className="pt-6 border-t-2 border-gray-100">
                             <button
-                                onClick={handleGenerateCertificate}
-                                className="w-full bg-[#176a6a] hover:bg-[#145555] text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:scale-[1.01]"
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-4 sm:py-5 rounded-xl transition-all shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-base sm:text-lg transform hover:scale-[1.02] active:scale-[0.98]"
                             >
-                                Generate Certificate
+                                {isSubmitting ? (
+                                    <>
+                                        <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Submitting Test Data...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Submit Lab Test Data</span>
+                                    </>
+                                )}
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
-            </main>
+            </div>
         </div>
     )
 }

@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import QuickLabRegistrationForm from './components/QuickLabRegistrationForm'
-import QuickProcessorRegistrationForm from './components/QuickProcessorRegistrationForm'
-import QuickManufacturerRegistrationForm from './components/QuickManufacturerRegistrationForm'
 
 interface PendingRegistration {
-    id: number
+    id: string
     type: 'Laboratory' | 'Processor' | 'Manufacturer'
     name: string
     contact: string
@@ -21,119 +18,287 @@ interface PendingRegistration {
     city?: string
     state?: string
     pincode?: string
+    // Store full original data
+    originalData?: any
 }
 
 export default function AdminPage() {
-    const [activeSection, setActiveSection] = useState('new-registration')
-    const [registrationRole, setRegistrationRole] = useState('')
-    const [showApprovals, setShowApprovals] = useState(false)
+    const [activeSection, setActiveSection] = useState('approve-registrations')
+    const [showApprovals, setShowApprovals] = useState(true)
     const [selectedRegistration, setSelectedRegistration] = useState<PendingRegistration | null>(null)
+    const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState('')
+    const [originalRequests, setOriginalRequests] = useState<any[]>([])
+    const [processingId, setProcessingId] = useState<string | null>(null)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [userEmail, setUserEmail] = useState<string>('')
 
-    // Mock pending registrations data with more details
-    const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>([
-        {
-            id: 1,
-            type: 'Laboratory',
-            name: 'AYUSH Quality Labs',
-            contact: 'Dr. Sharma',
-            email: 'sharma@ayushlab.com',
-            phone: '+91 98765 43210',
-            submittedDate: '2025-12-07',
-            nablNumber: 'NABL-123456',
-            address: '123 Lab Street',
-            city: 'Bhopal',
-            state: 'Madhya Pradesh',
-            pincode: '462001'
-        },
-        {
-            id: 2,
-            type: 'Processor',
-            name: 'Herbal Processing Unit',
-            contact: 'Mr. Kumar',
-            email: 'kumar@herbprocess.com',
-            phone: '+91 98765 43211',
-            submittedDate: '2025-12-06',
-            licenseNumber: 'PROC-789012',
-            address: '456 Processing Lane',
-            city: 'Indore',
-            state: 'Madhya Pradesh',
-            pincode: '452001'
-        },
-        {
-            id: 3,
-            type: 'Manufacturer',
-            name: 'Vedic Pharma Ltd',
-            contact: 'Ms. Patel',
-            email: 'patel@vedicpharma.com',
-            phone: '+91 98765 43212',
-            submittedDate: '2025-12-05',
-            fssaiNumber: 'FSSAI-345678',
-            licenseNumber: 'MFG-901234',
-            address: '789 Manufacturing Road',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            pincode: '400001'
+    // Helper function to get token from cookies or localStorage
+    const getToken = () => {
+        if (typeof document === 'undefined') return null
+        
+        // Try cookies first
+        const cookies = document.cookie.split(';')
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=')
+            if (name === 'jwt_token') {
+                const decoded = decodeURIComponent(value)
+                if (decoded) return decoded
+            }
         }
-    ])
+        
+        // Fallback to localStorage
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('jwt_token')
+            if (token) return token
+        }
+        
+        return null
+    }
 
-    const handleApprove = (id: number) => {
+    // Helper function to decode JWT and get user email
+    const getUserEmailFromToken = () => {
+        try {
+            const token = getToken()
+            if (!token) return null
+
+            // JWT tokens have 3 parts separated by dots
+            const parts = token.split('.')
+            if (parts.length !== 3) return null
+
+            // Decode the payload (second part)
+            const payload = parts[1]
+            // Add padding if needed
+            const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4)
+            const decodedPayload = JSON.parse(atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/')))
+            
+            // Try to get email from various possible fields
+            return decodedPayload.email || decodedPayload.user?.email || decodedPayload.userEmail || null
+        } catch (error) {
+            console.error('Error decoding token:', error)
+            return null
+        }
+    }
+
+    // Fetch user email on component mount
+    useEffect(() => {
+        const email = getUserEmailFromToken()
+        if (email) {
+            setUserEmail(email)
+        } else {
+            // If email not in token, try to fetch from API
+            const fetchUserInfo = async () => {
+                try {
+                    const token = getToken()
+                    if (!token) return
+
+                    const response = await fetch('http://192.168.50.154:3000/api/auth/me', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+
+                    if (response.ok) {
+                        const data = await response.json()
+                        const email = data.email || data.user?.email || data.data?.email
+                        if (email) {
+                            setUserEmail(email)
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching user info:', error)
+                }
+            }
+            fetchUserInfo()
+        }
+    }, [])
+
+    // Fetch pending registrations from API
+    const fetchPendingRegistrations = async () => {
+        setIsLoading(true)
+        setError('')
+        try {
+            const token = getToken()
+            const headers: HeadersInit = {
+                'Content-Type': 'application/json',
+            }
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`
+            }
+
+            const response = await fetch('http://192.168.50.154:3000/api/approval/requests', {
+                method: 'GET',
+                headers,
+            })
+
+            const data = await response.json()
+            console.log('API Response:', data)
+
+            if (response.ok && data && data.success) {
+                // Extract requests from data.data.requests
+                const requests = data.data?.requests || []
+                
+                // Save original requests data
+                setOriginalRequests(requests)
+                
+                if (Array.isArray(requests) && requests.length > 0) {
+                    setPendingRegistrations(requests.map((item: any) => ({
+                        id: item.id || item._id || Date.now().toString(),
+                        type: item.role === 'MANUFACTURER' ? 'Manufacturer' : 
+                              item.role === 'LAB QA' ? 'Laboratory' : 
+                              item.role === 'PROCESSOR' ? 'Processor' : 'Processor',
+                        name: item.companyName || item.name || '',
+                        contact: item.contactPerson || item.contact || '',
+                        email: item.email || '',
+                        phone: item.phone || '',
+                        submittedDate: item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                        nablNumber: item.nablNumber,
+                        licenseNumber: item.licenseNumber || '',
+                        fssaiNumber: item.fssaiNumber,
+                        address: item.address,
+                        city: item.city,
+                        state: item.state,
+                        pincode: item.pincode,
+                        originalData: item, // Store full original data
+                    })))
+                } else {
+                    // No pending registrations
+                    setPendingRegistrations([])
+                }
+            } else {
+                setError(data?.message || 'Failed to load pending registrations')
+                setPendingRegistrations([])
+            }
+        } catch (err) {
+            console.error('Error fetching registrations:', err)
+            setError('Unable to connect to server')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (activeSection === 'approve-registrations') {
+            fetchPendingRegistrations()
+        }
+    }, [activeSection])
+
+    const handleApprove = async (id: string) => {
         const registration = pendingRegistrations.find(r => r.id === id)
-        if (registration) {
-            // Generate credentials
-            const generatedEmail = registration.email
-            const generatedPassword = 'Temp@' + Math.random().toString(36).slice(-8)
+        if (!registration) {
+            alert('Registration not found')
+            return
+        }
 
-            // In a real application, this would send an API request to create the user account
-            // and send credentials via email
-            alert(`✅ Approved!\n\nCredentials Generated:\nEmail: ${generatedEmail}\nPassword: ${generatedPassword}\n\nCredentials will be sent to the registered email.`)
+        const token = getToken()
+        if (!token) {
+            alert('Please login to approve registrations')
+            return
+        }
 
-            // Remove from pending list
-            setPendingRegistrations(prev => prev.filter(r => r.id !== id))
-            setSelectedRegistration(null)
+        setProcessingId(id)
+        try {
+            console.log('Sending approve request:', { id, token: token ? 'Token present' : 'No token' })
+            
+            const response = await fetch(`http://192.168.50.154:3000/api/approval/requests/approve`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    id: id,
+                    status: 'APPROVED',
+                }),
+            })
+
+            const data = await response.json()
+            console.log('Approve response:', data)
+
+            if (response.ok && data.success) {
+                alert(`✅ Approved!\n\nRegistration has been approved successfully.`)
+                
+                // Refresh the list from API
+                await fetchPendingRegistrations()
+                setSelectedRegistration(null)
+            } else {
+                alert(data?.message || 'Failed to approve registration')
+            }
+        } catch (err) {
+            console.error('Error approving registration:', err)
+            alert('Unable to connect to server. Please try again.')
+        } finally {
+            setProcessingId(null)
         }
     }
 
-    const handleReject = (id: number) => {
-        if (confirm('Are you sure you want to reject this registration?')) {
-            setPendingRegistrations(prev => prev.filter(r => r.id !== id))
-            setSelectedRegistration(null)
-            alert('Registration rejected.')
+    const handleReject = async (id: string) => {
+        const registration = pendingRegistrations.find(r => r.id === id)
+        if (!registration) {
+            alert('Registration not found')
+            return
+        }
+
+        const reason = prompt('Please provide a reason for rejection (optional):')
+        if (reason === null) {
+            return // User cancelled
+        }
+
+        const token = getToken()
+        if (!token) {
+            alert('Please login to reject registrations')
+            return
+        }
+
+        setProcessingId(id)
+        try {
+            console.log('Sending reject request:', { id, token: token ? 'Token present' : 'No token' })
+            
+            const response = await fetch(`http://192.168.50.154:3000/api/approval/requests/reject`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    id: id,
+                    status: 'REJECTED',
+                    rejectedReason: reason || '',
+                }),
+            })
+
+            const data = await response.json()
+            console.log('Reject response:', data)
+
+            if (response.ok && data.success) {
+                alert('Registration rejected successfully.')
+                
+                // Refresh the list from API
+                await fetchPendingRegistrations()
+                setSelectedRegistration(null)
+            } else {
+                alert(data?.message || 'Failed to reject registration')
+            }
+        } catch (err) {
+            console.error('Error rejecting registration:', err)
+            alert('Unable to connect to server. Please try again.')
+        } finally {
+            setProcessingId(null)
         }
     }
 
-    // Handle new registration submission
-    const handleNewRegistration = (data: any, type: 'Laboratory' | 'Processor' | 'Manufacturer') => {
-        const newRegistration: PendingRegistration = {
-            id: Date.now(),
-            type: type,
-            name: data.labName || data.processorName || data.manufacturerName,
-            contact: data.contactPerson,
-            email: data.email,
-            phone: data.phone,
-            submittedDate: new Date().toISOString().split('T')[0],
-            nablNumber: data.nablNumber,
-            licenseNumber: data.licenseNumber,
-            fssaiNumber: data.fssaiNumber,
-            address: data.address,
-            city: data.city,
-            state: data.state,
-            pincode: data.pincode
-        }
-
-        setPendingRegistrations(prev => [newRegistration, ...prev])
-
-        // Show success message and reset form
-        alert('✅ Registration submitted successfully! It will be reviewed by the admin.')
-        setRegistrationRole('')
-    }
 
     const sidebarItems = [
         {
-            id: 'new-registration',
-            label: 'New Registration',
+            id: 'approve-registrations',
+            label: 'Approve Registrations',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             )
         },
@@ -187,9 +352,19 @@ export default function AdminPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-white flex">
+            {/* Mobile Menu Overlay */}
+            {sidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                ></div>
+            )}
+
             {/* Sidebar */}
-            <aside className="fixed inset-y-0 left-0 w-64 bg-[#014848] text-white z-50 flex flex-col">
+            <aside className={`fixed inset-y-0 left-0 w-64 bg-[#014848] text-white z-50 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}>
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-lg p-1.5 flex items-center justify-center">
@@ -208,7 +383,10 @@ export default function AdminPage() {
                             key={item.id}
                             onClick={() => {
                                 setActiveSection(item.id)
-                                setRegistrationRole('')
+                                if (item.id === 'approve-registrations') {
+                                    setShowApprovals(true)
+                                }
+                                setSidebarOpen(false) // Close sidebar on mobile when item is clicked
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeSection === item.id
                                 ? 'bg-white text-[#014848]'
@@ -224,11 +402,13 @@ export default function AdminPage() {
                 <div className="p-4 border-t border-white/10 bg-[#003838]">
                     <div className="flex items-center gap-3 px-2 mb-4">
                         <div className="w-9 h-9 rounded-full bg-teal-800 flex items-center justify-center text-xs font-bold">
-                            AD
+                            {userEmail ? userEmail.charAt(0).toUpperCase() : 'AD'}
                         </div>
-                        <div>
-                            <p className="text-sm font-medium">Administrator</p>
-                            <p className="text-xs text-teal-200">admin@ayush.gov.in</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">Administrator</p>
+                            <p className="text-xs text-teal-200 truncate" title={userEmail || 'admin@ayush.gov.in'}>
+                                {userEmail || 'admin@ayush.gov.in'}
+                            </p>
                         </div>
                     </div>
                     <Link href="/" className="flex items-center justify-center gap-2 w-full py-2 text-xs bg-white/10 hover:bg-red-500/80 rounded-md transition-colors">
@@ -241,128 +421,68 @@ export default function AdminPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 ml-64 p-8 bg-gray-50">
-                <header className="mb-8 bg-white p-6 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-4">
+            <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 bg-gray-50">
+                {/* Mobile Header */}
+                <div className="lg:hidden mb-4 flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="p-2 rounded-lg bg-[#014848] text-white hover:bg-[#013636] transition-colors"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900">ANVESHA Admin</h2>
+                    <div className="w-10"></div>
+                </div>
+
+                <header className="mb-4 sm:mb-8 bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                         <div className="p-3 bg-teal-50 rounded-lg text-[#014848]">
                             {sidebarItems.find(i => i.id === activeSection)?.icon}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {sidebarItems.find(i => i.id === activeSection)?.label}
                             </h2>
-                            <p className="text-sm text-gray-500 mt-1">Manage system operations</p>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage system operations</p>
                         </div>
                     </div>
                 </header>
 
-                <div className="bg-white rounded-lg border border-gray-200 min-h-[600px] p-8">
-                    {/* New Registration Section */}
-                    {activeSection === 'new-registration' && (
+                <div className="bg-white rounded-lg border border-gray-200 min-h-[600px] p-4 sm:p-6 lg:p-8">
+                    {/* Approve Registrations Section */}
+                    {activeSection === 'approve-registrations' && (
                         <div>
-                            {!registrationRole ? (
-                                <div className="max-w-3xl mx-auto">
-                                    <div className="text-center mb-8">
-                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-100 rounded-full mb-4">
-                                            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-3xl font-bold text-gray-900 mb-3">New Registration</h3>
-                                        <p className="text-gray-600 text-lg">Register new facilities in the ANVESHA ecosystem</p>
-                                    </div>
-
-                                    <div className="bg-teal-50 rounded-lg p-8 mb-8 border border-teal-200">
-                                        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                            <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Who Can Register?
-                                        </h4>
-                                        <div className="space-y-3">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">Quality Testing Laboratories</p>
-                                                    <p className="text-sm text-gray-600">AYUSH-approved labs for herb quality testing and certification</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">Processing Units</p>
-                                                    <p className="text-sm text-gray-600">Licensed facilities for herb processing, drying, and packaging</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">Manufacturers</p>
-                                                    <p className="text-sm text-gray-600">FSSAI-licensed manufacturers of Ayurvedic products</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-center gap-4">
-                                        <button
-                                            onClick={() => setRegistrationRole('select')}
-                                            className="inline-flex items-center gap-3 bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 py-4 rounded-lg transition-colors"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                            Start New Registration
-                                        </button>
-
-                                        <button
-                                            onClick={() => setShowApprovals(true)}
-                                            className="inline-flex items-center gap-3 bg-gray-700 hover:bg-gray-800 text-white font-bold px-8 py-4 rounded-lg transition-colors"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            View Pending Approvals
-                                            {pendingRegistrations.length > 0 && (
-                                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                                    {pendingRegistrations.length}
-                                                </span>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : showApprovals ? (
+                            {showApprovals ? (
                                 <div className="max-w-6xl mx-auto">
-                                    <div className="mb-8">
-                                        <button
-                                            onClick={() => {
-                                                setShowApprovals(false)
-                                                setSelectedRegistration(null)
-                                            }}
-                                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium mb-4"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                            Back
-                                        </button>
-                                        <h3 className="text-2xl font-bold text-gray-900">Pending Approvals</h3>
-                                        <p className="text-gray-600 mt-1">Review and approve new facility registrations</p>
+                                    <div className="mb-4 sm:mb-8">
+                                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Pending Approvals</h3>
+                                        <p className="text-sm sm:text-base text-gray-600 mt-1">Review and approve new facility registrations</p>
                                     </div>
 
-                                    {pendingRegistrations.length === 0 ? (
+                                    {isLoading ? (
+                                        <div className="text-center py-12">
+                                            <svg className="animate-spin h-12 w-12 text-teal-600 mx-auto mb-4" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <p className="text-gray-600 font-medium">Loading pending registrations...</p>
+                                        </div>
+                                    ) : error ? (
+                                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
+                                            <svg className="w-12 h-12 text-red-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-red-700 font-semibold mb-2">{error}</p>
+                                            <button
+                                                onClick={() => window.location.reload()}
+                                                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
+                                            >
+                                                Retry
+                                            </button>
+                                        </div>
+                                    ) : pendingRegistrations.length === 0 ? (
                                         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                                             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -391,11 +511,11 @@ export default function AdminPage() {
                                                         Submitted: {selectedRegistration.submittedDate}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-3xl font-bold">{selectedRegistration.name}</h3>
+                                                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">{selectedRegistration.name}</h3>
                                             </div>
 
-                                            <div className="p-8">
-                                                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                            <div className="p-4 sm:p-6 lg:p-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                                                     <div className="space-y-4">
                                                         <h4 className="text-lg font-bold text-gray-900 border-b-2 border-[#016868] pb-2">Contact Information</h4>
                                                         <div>
@@ -444,37 +564,63 @@ export default function AdminPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex gap-4 pt-6 border-t-2 border-gray-200">
+                                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6 border-t-2 border-gray-200">
                                                     <button
                                                         onClick={() => handleApprove(selectedRegistration.id)}
-                                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                                                        disabled={processingId === selectedRegistration.id}
+                                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-4 sm:px-8 py-3 sm:py-4 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                                                     >
-                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        Approve & Generate Credentials
+                                                        {processingId === selectedRegistration.id ? (
+                                                            <>
+                                                                <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                </svg>
+                                                                <span>Processing...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Approve & Generate Credentials
+                                                            </>
+                                                        )}
                                                     </button>
                                                     <button
                                                         onClick={() => handleReject(selectedRegistration.id)}
-                                                        className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                                                        disabled={processingId === selectedRegistration.id}
+                                                        className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-4 sm:px-8 py-3 sm:py-4 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                                                     >
-                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                        Reject Application
+                                                        {processingId === selectedRegistration.id ? (
+                                                            <>
+                                                                <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                </svg>
+                                                                <span>Processing...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                                Reject Application
+                                                            </>
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     ) : (
                                         // List View
-                                        <div className="space-y-4">
+                                        <div className="space-y-3 sm:space-y-4">
                                             {pendingRegistrations.map((registration) => (
-                                                <div key={registration.id} className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-[#016868] hover:shadow-md transition-all">
-                                                    <div className="flex items-start justify-between">
+                                                <div key={registration.id} className="bg-white border-2 border-gray-200 rounded-xl p-4 sm:p-6 hover:border-[#016868] hover:shadow-md transition-all">
+                                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                                         <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-3">
-                                                                <span className="px-3 py-1 bg-[#016868]/10 text-[#016868] text-xs font-bold rounded-full border-2 border-[#016868]/30">
+                                                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+                                                                <span className="px-2 sm:px-3 py-1 bg-[#016868]/10 text-[#016868] text-xs font-bold rounded-full border-2 border-[#016868]/30">
                                                                     {registration.type}
                                                                 </span>
                                                                 <span className="text-xs text-gray-500 font-semibold">
@@ -482,30 +628,33 @@ export default function AdminPage() {
                                                                 </span>
                                                             </div>
 
-                                                            <h4 className="text-xl font-bold text-gray-900 mb-3">{registration.name}</h4>
+                                                            <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{registration.name}</h4>
 
-                                                            <div className="grid grid-cols-3 gap-4 text-sm">
+                                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
                                                                 <div>
-                                                                    <p className="text-gray-500 font-semibold">Contact Person</p>
-                                                                    <p className="font-bold text-gray-900">{registration.contact}</p>
+                                                                    <p className="text-gray-500 font-semibold text-xs sm:text-sm">Contact Person</p>
+                                                                    <p className="font-bold text-gray-900 text-sm sm:text-base">{registration.contact}</p>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-gray-500 font-semibold">Email</p>
-                                                                    <p className="font-bold text-gray-900">{registration.email}</p>
+                                                                    <p className="text-gray-500 font-semibold text-xs sm:text-sm">Email</p>
+                                                                    <p className="font-bold text-gray-900 text-sm sm:text-base break-all">{registration.email}</p>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-gray-500 font-semibold">Phone</p>
-                                                                    <p className="font-bold text-gray-900">{registration.phone}</p>
+                                                                    <p className="text-gray-500 font-semibold text-xs sm:text-sm">Phone</p>
+                                                                    <p className="font-bold text-gray-900 text-sm sm:text-base">{registration.phone}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex flex-col gap-2 ml-6">
+                                                        <div className="flex flex-col sm:flex-col gap-2 sm:ml-6 w-full sm:w-auto">
                                                             <button
-                                                                onClick={() => setSelectedRegistration(registration)}
-                                                                className="flex items-center gap-2 bg-[#016868] hover:bg-[#014d4d] text-white font-bold px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+                                                                onClick={() => {
+                                                                    setSelectedRegistration(registration)
+                                                                    setSidebarOpen(false)
+                                                                }}
+                                                                className="flex items-center justify-center gap-2 bg-[#016868] hover:bg-[#014d4d] text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
                                                             >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                 </svg>
@@ -514,21 +663,37 @@ export default function AdminPage() {
                                                             <div className="flex gap-2">
                                                                 <button
                                                                     onClick={() => handleApprove(registration.id)}
-                                                                    className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+                                                                    disabled={processingId === registration.id}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     title="Approve"
                                                                 >
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                    </svg>
+                                                                    {processingId === registration.id ? (
+                                                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                        </svg>
+                                                                    ) : (
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    )}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleReject(registration.id)}
-                                                                    className="flex-1 flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm"
+                                                                    disabled={processingId === registration.id}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     title="Reject"
                                                                 >
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
+                                                                    {processingId === registration.id ? (
+                                                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                        </svg>
+                                                                    ) : (
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
+                                                                    )}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -538,83 +703,7 @@ export default function AdminPage() {
                                         </div>
                                     )}
                                 </div>
-                            ) : registrationRole === 'select' ? (
-                                <div className="max-w-4xl mx-auto">
-                                    <div className="mb-8">
-                                        <button
-                                            onClick={() => setRegistrationRole('')}
-                                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium mb-4"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                            Back
-                                        </button>
-                                        <h3 className="text-2xl font-bold text-gray-900">Select Facility Type</h3>
-                                        <p className="text-gray-600 mt-1">Choose the type of facility you want to register</p>
-                                    </div>
-
-                                    <div className="grid md:grid-cols-3 gap-6">
-                                        <button
-                                            onClick={() => setRegistrationRole('lab')}
-                                            className="group p-6 border-2 border-gray-200 rounded-lg hover:border-teal-500 transition-colors text-left"
-                                        >
-                                            <div className="w-14 h-14 bg-blue-100 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors">
-                                                <svg className="w-8 h-8 text-blue-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                                </svg>
-                                            </div>
-                                            <h4 className="font-bold text-lg text-gray-900 mb-2">Laboratory</h4>
-                                            <p className="text-sm text-gray-600">Quality testing and certification facility</p>
-                                        </button>
-
-                                        <button
-                                            onClick={() => setRegistrationRole('processor')}
-                                            className="group p-6 border-2 border-gray-200 rounded-lg hover:border-teal-500 transition-colors text-left"
-                                        >
-                                            <div className="w-14 h-14 bg-purple-100 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors">
-                                                <svg className="w-8 h-8 text-purple-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                            </div>
-                                            <h4 className="font-bold text-lg text-gray-900 mb-2">Processor</h4>
-                                            <p className="text-sm text-gray-600">Herb processing and packaging unit</p>
-                                        </button>
-
-                                        <button
-                                            onClick={() => setRegistrationRole('manufacturer')}
-                                            className="group p-6 border-2 border-gray-200 rounded-lg hover:border-teal-500 transition-colors text-left"
-                                        >
-                                            <div className="w-14 h-14 bg-orange-100 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors">
-                                                <svg className="w-8 h-8 text-orange-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                </svg>
-                                            </div>
-                                            <h4 className="font-bold text-lg text-gray-900 mb-2">Manufacturer</h4>
-                                            <p className="text-sm text-gray-600">Ayurvedic product manufacturing facility</p>
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div>
-                                    <button
-                                        onClick={() => setRegistrationRole('select')}
-                                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium mb-6"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                        Back to Selection
-                                    </button>
-
-                                    <div>
-                                        {registrationRole === 'lab' && <QuickLabRegistrationForm />}
-                                        {registrationRole === 'processor' && <QuickProcessorRegistrationForm />}
-                                        {registrationRole === 'manufacturer' && <QuickManufacturerRegistrationForm />}
-                                    </div>
-                                </div>
-                            )}
+                            ) : null}
                         </div>
                     )}
 

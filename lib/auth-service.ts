@@ -14,7 +14,7 @@ export interface User {
     createdAt: string;
 }
 
- //Updated API URL to point to localhost:5000
+//Updated API URL to point to localhost:5000
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -58,7 +58,17 @@ api.interceptors.response.use(
 );
 
 export const AuthService = {
-    register: async (user: { name: string; email: string; password: string; role: UserRole }): Promise<{ success: boolean; message: string }> => {
+    register: async (user: {
+        name: string;
+        email: string;
+        password: string;
+        role: UserRole;
+        companyName: string;
+        phone: string | null;
+        contactPerson: string | null;
+        licenseNumber: string;
+        gstNumber: string;
+    }): Promise<{ success: boolean; message: string }> => {
         try {
             const response = await api.post('/register', user);
             return { success: true, message: response.data.message || 'Registration successful' };
@@ -85,122 +95,91 @@ export const AuthService = {
 
     login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
         try {
-            // Mock user database for demonstration (no backend required)
-            const mockUsers = [
+            // Call real API for authentication
+            const apiUrl = 'http://192.168.50.154:3000/api/auth/email/signin';
+            console.log('🔵 Attempting signin with:', { email, apiUrl });
+
+            const response = await axios.post(apiUrl,
+                { email, password },
                 {
-                    id: 'admin-001',
-                    name: 'System Administrator',
-                    email: 'admin@ayush.gov.in',
-                    password: 'admin123',
-                    role: 'Admin' as UserRole,
-                    status: 'APPROVED' as UserStatus,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'lab-001',
-                    name: 'Dr. Rajesh Kumar',
-                    email: 'lab@ayush.gov.in',
-                    password: 'lab123',
-                    role: 'Lab QA' as UserRole,
-                    status: 'APPROVED' as UserStatus,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'processor-001',
-                    name: 'Amit Sharma',
-                    email: 'processor@ayush.gov.in',
-                    password: 'processor123',
-                    role: 'Processor' as UserRole,
-                    status: 'APPROVED' as UserStatus,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'manufacturer-001',
-                    name: 'Priya Patel',
-                    email: 'manufacturer@ayush.gov.in',
-                    password: 'manufacturer123',
-                    role: 'Manufacturer' as UserRole,
-                    status: 'APPROVED' as UserStatus,
-                    createdAt: new Date().toISOString()
-                },
-                // Additional demo user with your email
-                {
-                    id: 'user-kartik',
-                    name: 'Kartik Gupta',
-                    email: 'kartik1298gupta@gmail.com',
-                    password: 'demo123',
-                    role: 'Admin' as UserRole,
-                    status: 'APPROVED' as UserStatus,
-                    createdAt: new Date().toISOString()
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 10000
                 }
-            ];
+            );
 
-            // Find user by email
-            const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            console.log('✅ API Response received:', {
+                status: response.status,
+                data: response.data
+            });
 
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'Invalid email or password. Try demo credentials from the login page.'
-                };
+            // Check if we have a successful response
+            if (response.data) {
+                const token = response.data.token || response.data.accessToken || response.data.jwt;
+                const user = response.data.user || response.data.data?.user;
+
+                console.log('🔑 Token found:', !!token);
+                console.log('👤 User found:', !!user);
+
+                if (token) {
+                    console.log('✅ Storing token...');
+                    Cookies.set('jwt_token', token, {
+                        expires: 7,
+                        sameSite: 'Lax',
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+                }
+
+                if (user) {
+                    console.log('✅ Storing user data:', user);
+                    Cookies.set('user_data', JSON.stringify(user), {
+                        expires: 7,
+                        sameSite: 'Lax'
+                    });
+
+                    // Check user status
+                    if (user.status === 'PENDING') {
+                        return { success: false, message: 'Account is pending approval from Admin' };
+                    }
+                    if (user.status === 'REJECTED') {
+                        return { success: false, message: 'Account has been rejected.' };
+                    }
+                }
+
+                // If we have either token or user, consider it successful
+                if (token || user) {
+                    console.log('✅ Login successful with API');
+                    return {
+                        success: true,
+                        message: 'Login successful',
+                        user: user || {
+                            id: email,
+                            email,
+                            name: email.split('@')[0],
+                            role: 'Admin' as UserRole,
+                            status: 'APPROVED' as UserStatus,
+                            createdAt: new Date().toISOString()
+                        }
+                    };
+                }
             }
 
-            // Check password
-            if (user.password !== password) {
-                return {
-                    success: false,
-                    message: 'Invalid email or password'
-                };
-            }
-
-            // Create user object without password
-            const { password: _, ...userWithoutPassword } = user;
-
-            // Store mock token and user data
-            Cookies.set('jwt_token', `mock-token-${user.id}`, { expires: 7, sameSite: 'Lax' });
-            Cookies.set('user_data', JSON.stringify(userWithoutPassword), { expires: 7, sameSite: 'Lax' });
-
-            return {
-                success: true,
-                message: 'Login successful',
-                user: userWithoutPassword
-            };
-
-            // Note: The code below will only execute if you want to use real API
-            // Uncomment to enable real API calls when backend is ready
-            
-            const response = await api.post('/login', { email, password });
-
-            if (response.data.token && response.data.user) {
-                Cookies.set('jwt_token', response.data.token, { 
-                    expires: 7,
-                    sameSite: 'Lax',
-                    secure: process.env.NODE_ENV === 'production'
-                });
-
-                Cookies.set('user_data', JSON.stringify(response.data.user), { 
-                    expires: 7,
-                    sameSite: 'Lax'
-                });
-
-                if (response.data.user.status === 'PENDING') {
-                    return { success: false, message: 'Account is pending approval from Admin' };
-                }
-                if (response.data.user.status === 'REJECTED') {
-                    return { success: false, message: 'Account has been rejected.' };
-                }
-                
-                return { success: true, message: 'Login successful', user: response.data.user };
-            }
             return { success: false, message: 'Invalid response from server' };
-            
 
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
             let errorMessage = 'Login failed';
 
+            console.log('❌ API signin failed:', {
+                message: axiosError.message,
+                code: axiosError.code,
+                response: axiosError.response?.data,
+                status: axiosError.response?.status
+            });
+
             if (axiosError.code === 'ERR_NETWORK') {
-                errorMessage = `Cannot connect to server. Using mock authentication.`;
+                errorMessage = `Cannot connect to server. Please check if the API server is running.`;
             } else if (axiosError.code === 'ECONNABORTED') {
                 errorMessage = 'Connection timed out.';
             } else if (axiosError.response?.data?.message) {
