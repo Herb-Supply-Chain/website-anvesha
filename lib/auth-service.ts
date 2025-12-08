@@ -1,5 +1,6 @@
 
 import axios, { AxiosError } from 'axios';
+import Cookies from 'js-cookie';
 
 export type UserRole = 'Processor' | 'Lab QA' | 'Manufacturer' | 'Admin' | 'Unassigned';
 export type UserStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -13,7 +14,8 @@ export interface User {
     createdAt: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Updated API URL to point to localhost:5000
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -21,7 +23,39 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
     timeout: 30000, // 30 seconds timeout
+    withCredentials: true, // Enable sending cookies with requests
 });
+
+// Axios request interceptor to add JWT token to all requests
+api.interceptors.request.use(
+    (config) => {
+        const token = Cookies.get('jwt_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Axios response interceptor to handle token expiration
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token expired or invalid, clear it
+            Cookies.remove('jwt_token');
+            Cookies.remove('user_data');
+            // Optionally redirect to login
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const AuthService = {
     register: async (user: { name: string; email: string; password: string; role: UserRole }): Promise<{ success: boolean; message: string }> => {
@@ -53,32 +87,50 @@ export const AuthService = {
         try {
             // Admin backdoor for testing if API is down or for initial setup
             if (email === 'admin@ayush.gov.in' && password === 'admin123') {
+                const adminUser = {
+                    id: 'admin-master',
+                    name: 'System Admin',
+                    email: 'admin@ayush.gov.in',
+                    role: 'Admin' as UserRole,
+                    status: 'APPROVED' as UserStatus,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Store mock token and user data
+                Cookies.set('jwt_token', 'mock-admin-token', { expires: 7, sameSite: 'Lax' });
+                Cookies.set('user_data', JSON.stringify(adminUser), { expires: 7, sameSite: 'Lax' });
+
                 return {
                     success: true,
                     message: 'Login successful',
-                    user: {
-                        id: 'admin-master',
-                        name: 'System Admin',
-                        email: 'admin@ayush.gov.in',
-                        role: 'Admin',
-                        status: 'APPROVED',
-                        createdAt: new Date().toISOString()
-                    }
+                    user: adminUser
                 };
             }
 
             const response = await api.post('/login', { email, password });
 
-            if (response.data.user) {
-                // Check status on client side if server doesn't block it, 
-                // though ideally server should return 403 for PENDING.
-                // We'll trust the server response or check specific status fields.
+            if (response.data.token && response.data.user) {
+                // Store JWT token in cookie
+                Cookies.set('jwt_token', response.data.token, {
+                    expires: 7, // 7 days
+                    sameSite: 'Lax',
+                    secure: process.env.NODE_ENV === 'production' // Only use secure in production
+                });
+
+                // Store user data in cookie for easy access
+                Cookies.set('user_data', JSON.stringify(response.data.user), {
+                    expires: 7,
+                    sameSite: 'Lax'
+                });
+
+                // Check status on client side if server doesn't block it
                 if (response.data.user.status === 'PENDING') {
                     return { success: false, message: 'Account is pending approval from Admin' };
                 }
                 if (response.data.user.status === 'REJECTED') {
                     return { success: false, message: 'Account has been rejected.' };
                 }
+
                 return { success: true, message: 'Login successful', user: response.data.user };
             }
             return { success: false, message: 'Invalid response from server' };
@@ -102,6 +154,32 @@ export const AuthService = {
                 message: errorMessage
             };
         }
+    },
+
+    logout: () => {
+        // Remove JWT token and user data from cookies
+        Cookies.remove('jwt_token');
+        Cookies.remove('user_data');
+    },
+
+    getCurrentUser: (): User | null => {
+        const userData = Cookies.get('user_data');
+        if (userData) {
+            try {
+                return JSON.parse(userData);
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    },
+
+    isAuthenticated: (): boolean => {
+        return !!Cookies.get('jwt_token');
+    },
+
+    getToken: (): string | undefined => {
+        return Cookies.get('jwt_token');
     },
 
     getPendingUsers: async (): Promise<User[]> => {

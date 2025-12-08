@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function QuickLabRegistrationForm() {
     const [formData, setFormData] = useState({
@@ -8,11 +9,70 @@ export default function QuickLabRegistrationForm() {
         phone: '',
         nablNumber: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Lab Registration:', formData);
-        alert('Registration submitted successfully! Admin will review and approve.');
+        setIsSubmitting(true);
+        setSubmitStatus({ type: null, message: '' });
+
+        try {
+            // Send data to backend API
+            const response = await axios.post('http://10.80.62.80:3000/labregistration', {
+                labName: formData.labName,
+                contactPerson: formData.contactPerson,
+                email: formData.email,
+                phone: formData.phone,
+                nablNumber: formData.nablNumber,
+                submittedAt: new Date().toISOString()
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                timeout: 10000 // 10 seconds timeout
+            });
+
+            console.log('Lab Registration Response:', response.data);
+
+            setSubmitStatus({
+                type: 'success',
+                message: 'Registration submitted successfully! Admin will review and approve your application.'
+            });
+
+            // Reset form after successful submission
+            setFormData({
+                labName: '',
+                contactPerson: '',
+                email: '',
+                phone: '',
+                nablNumber: ''
+            });
+
+        } catch (error) {
+            console.error('Lab Registration Error:', error);
+
+            let errorMessage = 'Failed to submit registration. Please try again.';
+
+            if (axios.isAxiosError(error)) {
+                if (error.code === 'ECONNABORTED') {
+                    errorMessage = 'Request timeout. Please check your connection and try again.';
+                } else if (error.code === 'ERR_NETWORK') {
+                    errorMessage = 'Cannot connect to server. Please check if the server is running.';
+                } else if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+            }
+
+            setSubmitStatus({
+                type: 'error',
+                message: errorMessage
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -23,6 +83,27 @@ export default function QuickLabRegistrationForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Status Messages */}
+                {submitStatus.type && (
+                    <div className={`p-4 rounded-lg border ${submitStatus.type === 'success'
+                            ? 'bg-green-50 border-green-200 text-green-800'
+                            : 'bg-red-50 border-red-200 text-red-800'
+                        }`}>
+                        <div className="flex items-start gap-3">
+                            {submitStatus.type === 'success' ? (
+                                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                            <p className="text-sm font-semibold">{submitStatus.message}</p>
+                        </div>
+                    </div>
+                )}
+
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                         Laboratory Name <span className="text-red-500">*</span>
@@ -32,7 +113,8 @@ export default function QuickLabRegistrationForm() {
                         required
                         value={formData.labName}
                         onChange={(e) => setFormData({ ...formData, labName: e.target.value })}
-                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter laboratory name"
                     />
                 </div>
@@ -46,7 +128,8 @@ export default function QuickLabRegistrationForm() {
                         required
                         value={formData.contactPerson}
                         onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter contact person name"
                     />
                 </div>
@@ -60,7 +143,8 @@ export default function QuickLabRegistrationForm() {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="contact@laboratory.com"
                     />
                 </div>
@@ -74,7 +158,8 @@ export default function QuickLabRegistrationForm() {
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="+91 XXXXX XXXXX"
                     />
                 </div>
@@ -88,7 +173,8 @@ export default function QuickLabRegistrationForm() {
                         required
                         value={formData.nablNumber}
                         onChange={(e) => setFormData({ ...formData, nablNumber: e.target.value })}
-                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold"
+                        disabled={isSubmitting}
+                        className="w-full border-2 border-gray-300 focus:border-[#014848] outline-none py-3 px-4 rounded-lg transition-colors text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="NABL-XXXXXX"
                     />
                 </div>
@@ -107,9 +193,20 @@ export default function QuickLabRegistrationForm() {
                 <div className="flex justify-center pt-4">
                     <button
                         type="submit"
-                        className="bg-[#014848] text-white px-12 py-3 rounded-full text-lg font-bold shadow-lg hover:bg-[#003636] transform hover:scale-105 transition-all"
+                        disabled={isSubmitting}
+                        className="bg-[#014848] text-white px-12 py-3 rounded-full text-lg font-bold shadow-lg hover:bg-[#003636] transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
                     >
-                        Submit Registration
+                        {isSubmitting ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Submitting...
+                            </>
+                        ) : (
+                            'Submit Registration'
+                        )}
                     </button>
                 </div>
             </form>

@@ -5,7 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AuthService } from '@/lib/auth-service'
 
-function LoginCard() {
+interface LoginCardProps {
+    language: 'en' | 'hi'
+    t: any
+}
+
+function LoginCard({ language, t }: LoginCardProps) {
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -40,8 +45,8 @@ function LoginCard() {
                         <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
                     </div>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">Government Login</h3>
-                <p className="text-sm text-gray-500">Authorized Personnel Only</p>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">{t[language].govtLogin}</h3>
+                <p className="text-sm text-gray-500">{t[language].authorizedOnly}</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -52,7 +57,7 @@ function LoginCard() {
                 )}
 
                 <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t[language].emailAddress}</label>
                     <input
                         type="email"
                         value={email}
@@ -64,7 +69,7 @@ function LoginCard() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t[language].password}</label>
                     <input
                         type="password"
                         value={password}
@@ -86,15 +91,15 @@ function LoginCard() {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Processing...
+                            {t[language].processing}
                         </span>
-                    ) : 'Sign In'}
+                    ) : t[language].signIn}
                 </button>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                         <p className="text-xs text-center text-blue-800 font-medium mb-2">
-                            🔒 Secure Government Portal
+                            {t[language].securePortal}
                         </p>
                         <p className="text-xs text-center text-gray-600">
                             Demo: processor@ayush.gov.in / pass123
@@ -117,42 +122,198 @@ export default function LandingPage() {
 
     const t = {
         en: {
+            // Navigation
             navHome: 'Home',
             navAbout: 'About',
             navContact: 'Contact',
             navPortals: 'Portals',
             navRegister: 'Register',
+
+            // Hero Section
             govtIndia: 'Government of India | AYUSH Ministry',
-            tagline: 'A national initiative by the Ministry of AYUSH to ensure authenticity, quality, and sustainable sourcing across India\'s herbal value chain.',
-            consumerVerification: 'Consumer Product Verification',
-            loginGov: 'Login / GOV',
+            heroTitle: 'ANVESHA',
+            heroSubtitle: 'for Ayurvedic Herbs',
+            tagline: 'A national initiative ensuring authenticity, quality, and sustainable sourcing across India\'s herbal value chain.',
+            verifyProduct: 'Verify Product',
+            contactUs: 'Contact Us',
+
+            // Login Card
+            govtLogin: 'Government Login',
+            authorizedOnly: 'Authorized Personnel Only',
+            emailAddress: 'Email Address',
+            password: 'Password',
+            signIn: 'Sign In',
+            processing: 'Processing...',
+            securePortal: '🔒 Secure Government Portal',
+
+            // Key Initiatives
             keyInitiatives: 'Key Initiatives',
             keyInitiativesDesc: 'Comprehensive solutions for transparent and sustainable herb sourcing',
-            processFlow: 'Process Flow',
-            processFlowDesc: 'End-to-end journey from farm to consumer',
+            initiative1Title: 'End-to-End Traceability',
+            initiative1Desc: 'Track herbs from farm to shelf with blockchain-verified provenance',
+            initiative2Title: 'Quality Assured by Labs',
+            initiative2Desc: 'Laboratory testing and certification at every processing stage',
+            initiative3Title: 'Blockchain-Immutable Records',
+            initiative3Desc: 'Tamper-proof ledger ensuring data integrity and transparency',
+            initiative4Title: 'Sustainable Sourcing',
+            initiative4Desc: 'Geo-fencing and conservation compliance for ethical harvesting',
+            initiative5Title: 'Farmer Empowerment',
+            initiative5Desc: 'Direct market access and fair pricing for smallholder farmers',
+            initiative6Title: 'Consumer Confidence',
+            initiative6Desc: 'QR-code verification for authenticity and complete transparency',
+            learnMore: 'Learn more →',
+
+            // Process Flow
+            processFlowTag: 'From Farm to Consumer',
+            processFlow: 'Verified Supply Chain',
+            processFlowDesc: 'A completely transparent, blockchain-secured journey ensuring every herb\'s authenticity and quality.',
+            step1Title: 'Source Verification',
+            step1Desc: 'Geo-tagged harvesting at origin with farmer identity verification and sustainable practice compliance checks.',
+            step2Title: 'Quality Analysis',
+            step2Desc: 'Rigorous NABL-accredited laboratory testing for active principles, pesticide residues, and heavy metals.',
+            step3Title: 'Standardized Processing',
+            step3Desc: 'GMP-compliant processing and storage with continuous environmental monitoring to preserve potency.',
+            step4Title: 'Digital Certification',
+            step4Desc: 'Immutable blockchain records generated at every step, creating a tamper-proof certificate of analysis.',
+            step5Title: 'Consumer Validation',
+            step5Desc: 'End-users verify product authenticity and provenance details instantly via secure QR code scanning.',
+
+            // National Standards
             nationalStandards: 'Aligned with National Standards',
             nationalStandardsDesc: 'Compliant with regulatory and quality frameworks',
+            nmpbFull: 'National Medicinal Plants Board',
+            nmpbDesc: 'Sustainable harvesting guidelines',
+            gacpFull: 'Good Agricultural & Collection Practices',
+            gacpDesc: 'Quality cultivation standards',
+            aqrFull: 'Ayurvedic Quality Requirements',
+            aqrDesc: 'AYUSH Ministry compliance',
+            diiFull: 'Data Integrity & Interoperability',
+            diiDesc: 'FHIR-based metadata exchange',
+
+            // Pilot Impact
             pilotImpact: 'Pilot Impact',
-            pilotImpactDesc: 'Real-world results from our blockchain traceability system'
+            pilotImpactDesc: 'Real-world results from our blockchain traceability system',
+            stat1Value: '5,000+',
+            stat1Label: 'Farmers Onboarded',
+            stat2Value: '12,000+',
+            stat2Label: 'Batches Traced',
+            stat3Value: '98%',
+            stat3Label: 'Quality Pass Rate',
+            stat4Value: '50,000+',
+            stat4Label: 'Consumer Scans',
+            testimonial: '"This initiative has been transformative in ensuring the authenticity and quality of our herbal products. The blockchain-enabled traceability system has empowered our farmers and given our consumers complete confidence in the products they purchase. It represents the perfect synergy between traditional knowledge and modern technology."',
+            testimonialAuthor: 'Joint Secretary, Ministry of AYUSH',
+
+            // Footer
+            footerTagline: 'Empowering the Ayurvedic ecosystem with blockchain-based traceability and quality assurance.',
+            quickLinks: 'Quick Links',
+            portals: 'Portals',
+            contact: 'Contact',
+            home: 'Home',
+            aboutUs: 'About Us',
+            processorLogin: 'Processor Login',
+            labDashboard: 'Lab Dashboard',
+            manufacturerPortal: 'Manufacturer Portal',
+            adminConsole: 'Admin Console',
+            copyright: '© 2024 Ministry of AYUSH, Government of India. All rights reserved.',
+            byDevs: '🪶 By CrackedDevs.'
         },
         hi: {
+            // Navigation
             navHome: 'होम',
             navAbout: 'हमारे बारे में',
             navContact: 'संपर्क करें',
             navPortals: 'पोर्टल',
             navRegister: 'पंजीकरण',
+
+            // Hero Section
             govtIndia: 'भारत सरकार | आयुष मंत्रालय',
-            tagline: 'आयुष मंत्रालय द्वारा भारत की हर्बल मूल्य श्रृंखला में प्रामाणिकता, गुणवत्ता और टिकाऊ सोर्सिंग सुनिश्चित करने के लिए एक राष्ट्रीय पहल।',
-            consumerVerification: 'उपभोक्ता उत्पाद सत्यापन',
-            loginGov: 'लॉगिन / सरकार',
+            heroTitle: 'अन्वेषा',
+            heroSubtitle: 'आयुर्वेदिक जड़ी-बूटियों के लिए',
+            tagline: 'भारत की हर्बल मूल्य श्रृंखला में प्रामाणिकता, गुणवत्ता और टिकाऊ सोर्सिंग सुनिश्चित करने के लिए एक राष्ट्रीय पहल।',
+            verifyProduct: 'उत्पाद सत्यापित करें',
+            contactUs: 'संपर्क करें',
+
+            // Login Card
+            govtLogin: 'सरकारी लॉगिन',
+            authorizedOnly: 'केवल अधिकृत कर्मियों के लिए',
+            emailAddress: 'ईमेल पता',
+            password: 'पासवर्ड',
+            signIn: 'साइन इन करें',
+            processing: 'प्रोसेसिंग...',
+            securePortal: '🔒 सुरक्षित सरकारी पोर्टल',
+
+            // Key Initiatives
             keyInitiatives: 'मुख्य पहल',
             keyInitiativesDesc: 'पारदर्शी और टिकाऊ हर्बल सोर्सिंग के लिए व्यापक समाधान',
-            processFlow: 'प्रक्रिया प्रवाह',
-            processFlowDesc: 'खेत से उपभोक्ता तक की संपूर्ण यात्रा',
+            initiative1Title: 'संपूर्ण ट्रेसेबिलिटी',
+            initiative1Desc: 'ब्लॉकचेन-सत्यापित उत्पत्ति के साथ खेत से शेल्फ तक जड़ी-बूटियों को ट्रैक करें',
+            initiative2Title: 'प्रयोगशालाओं द्वारा गुणवत्ता आश्वासन',
+            initiative2Desc: 'हर प्रसंस्करण चरण में प्रयोगशाला परीक्षण और प्रमाणन',
+            initiative3Title: 'ब्लॉकचेन-अपरिवर्तनीय रिकॉर्ड',
+            initiative3Desc: 'डेटा अखंडता और पारदर्शिता सुनिश्चित करने वाला छेड़छाड़-रोधी खाता',
+            initiative4Title: 'टिकाऊ सोर्सिंग',
+            initiative4Desc: 'नैतिक कटाई के लिए जियो-फेंसिंग और संरक्षण अनुपालन',
+            initiative5Title: 'किसान सशक्तिकरण',
+            initiative5Desc: 'छोटे किसानों के लिए सीधी बाजार पहुंच और उचित मूल्य निर्धारण',
+            initiative6Title: 'उपभोक्ता विश्वास',
+            initiative6Desc: 'प्रामाणिकता और पूर्ण पारदर्शिता के लिए QR-कोड सत्यापन',
+            learnMore: 'और जानें →',
+
+            // Process Flow
+            processFlowTag: 'खेत से उपभोक्ता तक',
+            processFlow: 'सत्यापित आपूर्ति श्रृंखला',
+            processFlowDesc: 'हर जड़ी-बूटी की प्रामाणिकता और गुणवत्ता सुनिश्चित करने वाली पूरी तरह से पारदर्शी, ब्लॉकचेन-सुरक्षित यात्रा।',
+            step1Title: 'स्रोत सत्यापन',
+            step1Desc: 'किसान पहचान सत्यापन और टिकाऊ अभ्यास अनुपालन जांच के साथ मूल स्थान पर जियो-टैग की गई कटाई।',
+            step2Title: 'गुणवत्ता विश्लेषण',
+            step2Desc: 'सक्रिय सिद्धांतों, कीटनाशक अवशेषों और भारी धातुओं के लिए कठोर NABL-मान्यता प्राप्त प्रयोगशाला परीक्षण।',
+            step3Title: 'मानकीकृत प्रसंस्करण',
+            step3Desc: 'शक्ति को संरक्षित करने के लिए निरंतर पर्यावरण निगरानी के साथ GMP-अनुरूप प्रसंस्करण और भंडारण।',
+            step4Title: 'डिजिटल प्रमाणन',
+            step4Desc: 'हर कदम पर उत्पन्न अपरिवर्तनीय ब्लॉकचेन रिकॉर्ड, विश्लेषण का छेड़छाड़-रोधी प्रमाण पत्र बनाते हैं।',
+            step5Title: 'उपभोक्ता सत्यापन',
+            step5Desc: 'अंतिम उपयोगकर्ता सुरक्षित QR कोड स्कैनिंग के माध्यम से तुरंत उत्पाद प्रामाणिकता और उत्पत्ति विवरण सत्यापित करते हैं।',
+
+            // National Standards
             nationalStandards: 'राष्ट्रीय मानकों के साथ संरेखित',
             nationalStandardsDesc: 'नियामक और गुणवत्ता ढांचे के अनुरूप',
+            nmpbFull: 'राष्ट्रीय औषधीय पौधा बोर्ड',
+            nmpbDesc: 'टिकाऊ कटाई दिशानिर्देश',
+            gacpFull: 'अच्छी कृषि और संग्रह प्रथाएं',
+            gacpDesc: 'गुणवत्ता खेती मानक',
+            aqrFull: 'आयुर्वेदिक गुणवत्ता आवश्यकताएं',
+            aqrDesc: 'आयुष मंत्रालय अनुपालन',
+            diiFull: 'डेटा अखंडता और अंतरसंचालनीयता',
+            diiDesc: 'FHIR-आधारित मेटाडेटा विनिमय',
+
+            // Pilot Impact
             pilotImpact: 'पायलट प्रभाव',
-            pilotImpactDesc: 'हमारे ब्लॉकचेन ट्रेसेबिलिटी सिस्टम से वास्तविक दुनिया के परिणाम'
+            pilotImpactDesc: 'हमारे ब्लॉकचेन ट्रेसेबिलिटी सिस्टम से वास्तविक दुनिया के परिणाम',
+            stat1Value: '5,000+',
+            stat1Label: 'किसान शामिल',
+            stat2Value: '12,000+',
+            stat2Label: 'बैच ट्रैक किए गए',
+            stat3Value: '98%',
+            stat3Label: 'गुणवत्ता पास दर',
+            stat4Value: '50,000+',
+            stat4Label: 'उपभोक्ता स्कैन',
+            testimonial: '"यह पहल हमारे हर्बल उत्पादों की प्रामाणिकता और गुणवत्ता सुनिश्चित करने में परिवर्तनकारी रही है। ब्लॉकचेन-सक्षम ट्रेसेबिलिटी सिस्टम ने हमारे किसानों को सशक्त बनाया है और हमारे उपभोक्ताओं को उनके द्वारा खरीदे गए उत्पादों में पूर्ण विश्वास दिया है। यह पारंपरिक ज्ञान और आधुनिक तकनीक के बीच सही तालमेल का प्रतिनिधित्व करता है।"',
+            testimonialAuthor: 'संयुक्त सचिव, आयुष मंत्रालय',
+
+            // Footer
+            footerTagline: 'ब्लॉकचेन-आधारित ट्रेसेबिलिटी और गुणवत्ता आश्वासन के साथ आयुर्वेदिक पारिस्थितिकी तंत्र को सशक्त बनाना।',
+            quickLinks: 'त्वरित लिंक',
+            portals: 'पोर्टल',
+            contact: 'संपर्क',
+            home: 'होम',
+            aboutUs: 'हमारे बारे में',
+            processorLogin: 'प्रोसेसर लॉगिन',
+            labDashboard: 'लैब डैशबोर्ड',
+            manufacturerPortal: 'निर्माता पोर्टल',
+            adminConsole: 'एडमिन कंसोल',
+            copyright: '© 2024 आयुष मंत्रालय, भारत सरकार। सर्वाधिकार सुरक्षित।',
+            byDevs: '🪶 CrackedDevs द्वारा।'
         }
     }
 
@@ -178,33 +339,33 @@ export default function LandingPage() {
 
     const initiatives = [
         {
-            title: 'End-to-End Traceability',
-            description: 'Track herbs from farm to shelf with blockchain-verified provenance',
+            title: t[language].initiative1Title,
+            description: t[language].initiative1Desc,
             icon: 'T'
         },
         {
-            title: 'Quality Assured by Labs',
-            description: 'Laboratory testing and certification at every processing stage',
+            title: t[language].initiative2Title,
+            description: t[language].initiative2Desc,
             icon: 'Q'
         },
         {
-            title: 'Blockchain-Immutable Records',
-            description: 'Tamper-proof ledger ensuring data integrity and transparency',
+            title: t[language].initiative3Title,
+            description: t[language].initiative3Desc,
             icon: 'B'
         },
         {
-            title: 'Sustainable Sourcing',
-            description: 'Geo-fencing and conservation compliance for ethical harvesting',
+            title: t[language].initiative4Title,
+            description: t[language].initiative4Desc,
             icon: 'S'
         },
         {
-            title: 'Farmer Empowerment',
-            description: 'Direct market access and fair pricing for smallholder farmers',
+            title: t[language].initiative5Title,
+            description: t[language].initiative5Desc,
             icon: 'F'
         },
         {
-            title: 'Consumer Confidence',
-            description: 'QR-code verification for authenticity and complete transparency',
+            title: t[language].initiative6Title,
+            description: t[language].initiative6Desc,
             icon: 'C'
         }
     ]
@@ -216,8 +377,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             ),
-            title: 'Source Verification',
-            description: 'Geo-tagged harvesting at origin with farmer identity verification and sustainable practice compliance checks.'
+            title: t[language].step1Title,
+            description: t[language].step1Desc
         },
         {
             icon: (
@@ -225,8 +386,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
             ),
-            title: 'Quality Analysis',
-            description: 'Rigorous NABL-accredited laboratory testing for active principles, pesticide residues, and heavy metals.'
+            title: t[language].step2Title,
+            description: t[language].step2Desc
         },
         {
             icon: (
@@ -234,8 +395,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             ),
-            title: 'Standardized Processing',
-            description: 'GMP-compliant processing and storage with continuous environmental monitoring to preserve potency.'
+            title: t[language].step3Title,
+            description: t[language].step3Desc
         },
         {
             icon: (
@@ -243,8 +404,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             ),
-            title: 'Digital Certification',
-            description: 'Immutable blockchain records generated at every step, creating a tamper-proof certificate of analysis.'
+            title: t[language].step4Title,
+            description: t[language].step4Desc
         },
         {
             icon: (
@@ -252,23 +413,23 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             ),
-            title: 'Consumer Validation',
-            description: 'End-users verify product authenticity and provenance details instantly via secure QR code scanning.'
+            title: t[language].step5Title,
+            description: t[language].step5Desc
         }
     ]
 
     const standards = [
-        { name: 'NMPB', full: 'National Medicinal Plants Board', desc: 'Sustainable harvesting guidelines' },
-        { name: 'GACP', full: 'Good Agricultural & Collection Practices', desc: 'Quality cultivation standards' },
-        { name: 'AQR', full: 'Ayurvedic Quality Requirements', desc: 'AYUSH Ministry compliance' },
-        { name: 'DII', full: 'Data Integrity & Interoperability', desc: 'FHIR-based metadata exchange' }
+        { name: 'NMPB', full: t[language].nmpbFull, desc: t[language].nmpbDesc },
+        { name: 'GACP', full: t[language].gacpFull, desc: t[language].gacpDesc },
+        { name: 'AQR', full: t[language].aqrFull, desc: t[language].aqrDesc },
+        { name: 'DII', full: t[language].diiFull, desc: t[language].diiDesc }
     ]
 
     const stats = [
-        { value: '5,000+', label: 'Farmers Onboarded' },
-        { value: '12,000+', label: 'Batches Traced' },
-        { value: '98%', label: 'Quality Pass Rate' },
-        { value: '50,000+', label: 'Consumer Scans' }
+        { value: t[language].stat1Value, label: t[language].stat1Label },
+        { value: t[language].stat2Value, label: t[language].stat2Label },
+        { value: t[language].stat3Value, label: t[language].stat3Label },
+        { value: t[language].stat4Value, label: t[language].stat4Label }
     ]
 
     return (
@@ -341,13 +502,13 @@ export default function LandingPage() {
                             {/* ANVESHA Title */}
                             <div className="space-y-4">
                                 <h1 className="text-6xl lg:text-7xl font-bold text-teal-600 tracking-wide">
-                                    ANVESHA
+                                    {t[language].heroTitle}
                                 </h1>
                                 <h2 className="text-3xl lg:text-4xl font-bold text-teal-800">
-                                    for Ayurvedic Herbs
+                                    {t[language].heroSubtitle}
                                 </h2>
                                 <p className="text-lg text-gray-700 leading-relaxed max-w-2xl">
-                                    A national initiative ensuring <span className="font-bold text-teal-600">authenticity</span>, <span className="font-bold text-teal-600">quality</span>, and <span className="font-bold text-teal-600">sustainable sourcing</span> across India's herbal value chain.
+                                    {t[language].tagline}
                                 </p>
                             </div>
 
@@ -355,13 +516,12 @@ export default function LandingPage() {
                             <div className="flex gap-4 mt-12">
                                 <Link href="/consumer-portal">
                                     <button className="bg-[#014848] hover:bg-[#013636] text-white px-8 py-4 rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
-
-                                        <span>Verify Product</span>
+                                        <span>{t[language].verifyProduct}</span>
                                     </button>
                                 </Link>
                                 <Link href="/contact">
                                     <button className="bg-white hover:bg-gray-50 text-teal-700 px-8 py-4 rounded-lg font-semibold border-2 border-teal-600 transition-all hover:shadow-lg hover:scale-105 flex items-center gap-2">
-                                        <span>Contact Us</span>
+                                        <span>{t[language].contactUs}</span>
                                     </button>
                                 </Link>
                             </div>
@@ -369,7 +529,7 @@ export default function LandingPage() {
 
                         {/* Right Side - Login Card */}
                         <div className="flex justify-center lg:justify-end">
-                            <LoginCard />
+                            <LoginCard language={language} t={t} />
                         </div>
                     </div>
                 </div>
@@ -416,13 +576,13 @@ export default function LandingPage() {
 
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center mb-20">
-                        <span className="text-teal-600 font-semibold tracking-wider text-sm uppercase mb-3 block">From Farm to Consumer</span>
+                        <span className="text-teal-600 font-semibold tracking-wider text-sm uppercase mb-3 block">{t[language].processFlowTag}</span>
                         <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-6">
-                            Verified Supply Chain
+                            {t[language].processFlow}
                         </h3>
                         <div className="h-1.5 w-24 bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mx-auto mb-8"></div>
                         <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">
-                            A completely transparent, blockchain-secured journey ensuring every herb's authenticity and quality.
+                            {t[language].processFlowDesc}
                         </p>
                     </div>
 
@@ -468,10 +628,10 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
-                            Aligned with National Standards
+                            {t[language].nationalStandards}
                         </h3>
                         <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">Compliant with regulatory and quality frameworks</p>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].nationalStandardsDesc}</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {standards.map((standard, index) => (
@@ -492,9 +652,9 @@ export default function LandingPage() {
             < section className="py-20 px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">Pilot Impact</h3>
+                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">{t[language].pilotImpact}</h3>
                         <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">Real-world results from our blockchain traceability system</p>
+                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].pilotImpactDesc}</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
                         {stats.map((stat, index) => (
@@ -511,10 +671,10 @@ export default function LandingPage() {
                     {/* Testimonial */}
                     <div className="bg-white rounded-3xl p-12 max-w-4xl mx-auto shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
                         <p className="text-lg text-center leading-relaxed mb-8 text-gray-700 italic">
-                            "This initiative has been transformative in ensuring the authenticity and quality of our herbal products. The blockchain-enabled traceability system has empowered our farmers and given our consumers complete confidence in the products they purchase. It represents the perfect synergy between traditional knowledge and modern technology."
+                            {t[language].testimonial}
                         </p>
                         <div className="text-center">
-                            <div className="font-bold text-xl text-gray-900">Joint Secretary, Ministry of AYUSH</div>
+                            <div className="font-bold text-xl text-gray-900">{t[language].testimonialAuthor}</div>
                         </div>
                     </div>
                 </div>
@@ -530,29 +690,29 @@ export default function LandingPage() {
                                 <span className="font-bold text-lg">ANVESHA</span>
                             </div>
                             <p className="text-teal-100 text-sm leading-relaxed">
-                                Empowering the Ayurvedic ecosystem with blockchain-based traceability and quality assurance.
+                                {t[language].footerTagline}
                             </p>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">Quick Links</h4>
+                            <h4 className="font-bold mb-4 text-teal-50">{t[language].quickLinks}</h4>
                             <ul className="space-y-2 text-sm text-teal-200">
-                                <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                                <li><Link href="/" className="hover:text-white transition-colors">{t[language].home}</Link></li>
+                                <li><Link href="/about" className="hover:text-white transition-colors">{t[language].aboutUs}</Link></li>
+                                <li><Link href="/contact" className="hover:text-white transition-colors">{t[language].contact}</Link></li>
                                 <li><Link href="/consumer-portal" className="hover:text-white transition-colors">Verify Product</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">Portals</h4>
+                            <h4 className="font-bold mb-4 text-teal-50">{t[language].portals}</h4>
                             <ul className="space-y-2 text-sm text-teal-200">
-                                <li><Link href="/processor" className="hover:text-white transition-colors">Processor Login</Link></li>
-                                <li><Link href="/lab" className="hover:text-white transition-colors">Lab Dashboard</Link></li>
-                                <li><Link href="/manufacturer" className="hover:text-white transition-colors">Manufacturer Portal</Link></li>
-                                <li><Link href="/admin" className="hover:text-white transition-colors">Admin Console</Link></li>
+                                <li><Link href="/processor" className="hover:text-white transition-colors">{t[language].processorLogin}</Link></li>
+                                <li><Link href="/lab" className="hover:text-white transition-colors">{t[language].labDashboard}</Link></li>
+                                <li><Link href="/manufacturer" className="hover:text-white transition-colors">{t[language].manufacturerPortal}</Link></li>
+                                <li><Link href="/admin" className="hover:text-white transition-colors">{t[language].adminConsole}</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">Contact</h4>
+                            <h4 className="font-bold mb-4 text-teal-50">{t[language].contact}</h4>
                             <p className="text-teal-200 text-sm leading-relaxed">
                                 Ministry of AYUSH<br />
                                 AYUSH Bhawan, B Block<br />
@@ -567,8 +727,8 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <div className="pt-8 border-t border-teal-800 text-center text-sm text-teal-400">
-                        © 2024 Ministry of AYUSH, Government of India. All rights reserved.
-                        🪶 By CrackedDevs.
+                        {t[language].copyright}
+                        {t[language].byDevs}
                     </div>
                 </div>
             </footer >
