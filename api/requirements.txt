@@ -1,0 +1,16 @@
+# Python Backend Dependencies
+
+# Flask - Web framework
+flask==3.0.0
+
+# Flask-CORS - Enable CORS for frontend communication
+flask-cors==4.0.0
+
+# PyJWT - JWT token generation and verification
+PyJWT==2.8.0
+
+# python-dotenv - Environment variable management
+python-dotenv==1.0.0
+
+# Werkzeug - WSGI utilities (comes with Flask)
+Werkzeug==3.0.1

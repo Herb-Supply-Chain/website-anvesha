@@ -14,7 +14,7 @@ export interface User {
     createdAt: string;
 }
 
-// Updated API URL to point to localhost:5000
+ //Updated API URL to point to localhost:5000
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -85,64 +85,124 @@ export const AuthService = {
 
     login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
         try {
-            // Admin backdoor for testing if API is down or for initial setup
-            if (email === 'admin@ayush.gov.in' && password === 'admin123') {
-                const adminUser = {
-                    id: 'admin-master',
-                    name: 'System Admin',
+            // Mock user database for demonstration (no backend required)
+            const mockUsers = [
+                {
+                    id: 'admin-001',
+                    name: 'System Administrator',
                     email: 'admin@ayush.gov.in',
+                    password: 'admin123',
                     role: 'Admin' as UserRole,
                     status: 'APPROVED' as UserStatus,
                     createdAt: new Date().toISOString()
-                };
+                },
+                {
+                    id: 'lab-001',
+                    name: 'Dr. Rajesh Kumar',
+                    email: 'lab@ayush.gov.in',
+                    password: 'lab123',
+                    role: 'Lab QA' as UserRole,
+                    status: 'APPROVED' as UserStatus,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'processor-001',
+                    name: 'Amit Sharma',
+                    email: 'processor@ayush.gov.in',
+                    password: 'processor123',
+                    role: 'Processor' as UserRole,
+                    status: 'APPROVED' as UserStatus,
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'manufacturer-001',
+                    name: 'Priya Patel',
+                    email: 'manufacturer@ayush.gov.in',
+                    password: 'manufacturer123',
+                    role: 'Manufacturer' as UserRole,
+                    status: 'APPROVED' as UserStatus,
+                    createdAt: new Date().toISOString()
+                },
+                // Additional demo user with your email
+                {
+                    id: 'user-kartik',
+                    name: 'Kartik Gupta',
+                    email: 'kartik1298gupta@gmail.com',
+                    password: 'demo123',
+                    role: 'Admin' as UserRole,
+                    status: 'APPROVED' as UserStatus,
+                    createdAt: new Date().toISOString()
+                }
+            ];
 
-                // Store mock token and user data
-                Cookies.set('jwt_token', 'mock-admin-token', { expires: 7, sameSite: 'Lax' });
-                Cookies.set('user_data', JSON.stringify(adminUser), { expires: 7, sameSite: 'Lax' });
+            // Find user by email
+            const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
 
+            if (!user) {
                 return {
-                    success: true,
-                    message: 'Login successful',
-                    user: adminUser
+                    success: false,
+                    message: 'Invalid email or password. Try demo credentials from the login page.'
                 };
             }
 
+            // Check password
+            if (user.password !== password) {
+                return {
+                    success: false,
+                    message: 'Invalid email or password'
+                };
+            }
+
+            // Create user object without password
+            const { password: _, ...userWithoutPassword } = user;
+
+            // Store mock token and user data
+            Cookies.set('jwt_token', `mock-token-${user.id}`, { expires: 7, sameSite: 'Lax' });
+            Cookies.set('user_data', JSON.stringify(userWithoutPassword), { expires: 7, sameSite: 'Lax' });
+
+            return {
+                success: true,
+                message: 'Login successful',
+                user: userWithoutPassword
+            };
+
+            // Note: The code below will only execute if you want to use real API
+            // Uncomment to enable real API calls when backend is ready
+            
             const response = await api.post('/login', { email, password });
 
             if (response.data.token && response.data.user) {
-                // Store JWT token in cookie
-                Cookies.set('jwt_token', response.data.token, {
-                    expires: 7, // 7 days
+                Cookies.set('jwt_token', response.data.token, { 
+                    expires: 7,
                     sameSite: 'Lax',
-                    secure: process.env.NODE_ENV === 'production' // Only use secure in production
+                    secure: process.env.NODE_ENV === 'production'
                 });
 
-                // Store user data in cookie for easy access
-                Cookies.set('user_data', JSON.stringify(response.data.user), {
+                Cookies.set('user_data', JSON.stringify(response.data.user), { 
                     expires: 7,
                     sameSite: 'Lax'
                 });
 
-                // Check status on client side if server doesn't block it
                 if (response.data.user.status === 'PENDING') {
                     return { success: false, message: 'Account is pending approval from Admin' };
                 }
                 if (response.data.user.status === 'REJECTED') {
                     return { success: false, message: 'Account has been rejected.' };
                 }
-
+                
                 return { success: true, message: 'Login successful', user: response.data.user };
             }
             return { success: false, message: 'Invalid response from server' };
+            
 
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
             let errorMessage = 'Login failed';
 
             if (axiosError.code === 'ERR_NETWORK') {
-                errorMessage = `Cannot connect to server at ${API_URL}. Is it running?`;
+                errorMessage = `Cannot connect to server. Using mock authentication.`;
             } else if (axiosError.code === 'ECONNABORTED') {
-                errorMessage = 'Connection timed out. Server is busy or unreachable.';
+                errorMessage = 'Connection timed out.';
             } else if (axiosError.response?.data?.message) {
                 errorMessage = axiosError.response.data.message;
             } else if (axiosError.message) {

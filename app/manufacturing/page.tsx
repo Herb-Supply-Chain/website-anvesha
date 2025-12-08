@@ -8,23 +8,21 @@ import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
-interface ProcessorBatch {
+interface LabBatch {
     id: string
-    processorBatchId: string
+    batchId: string
     herb: string
     weight: number
     farmId: string
-    labResults?: {
+    labResults: {
         approved: boolean
         purity: number
         moisture: number
+        qualityGrade: string
     }
-    labTestDate?: string
-    processorData?: {
-        processorName: string
-        processingDate: string
-        packageSize: string
-    }
+    labTestDate: string
+    labName: string
+    certificateId: string
 }
 
 interface PackageConfig {
@@ -43,8 +41,8 @@ interface FinalPackage {
 export default function ManufacturingPage() {
     const router = useRouter()
     const [currentStep, setCurrentStep] = useState(1)
-    const [selectedBatch, setSelectedBatch] = useState<ProcessorBatch | null>(null)
-    const [availableBatches, setAvailableBatches] = useState<ProcessorBatch[]>([])
+    const [selectedBatch, setSelectedBatch] = useState<LabBatch | null>(null)
+    const [availableBatches, setAvailableBatches] = useState<LabBatch[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [verificationData, setVerificationData] = useState<any>(null)
 
@@ -86,42 +84,38 @@ export default function ManufacturingPage() {
         setIsLoading(true)
         try {
             // Mock data for demonstration
-            const mockBatches: ProcessorBatch[] = [
+            const mockBatches: LabBatch[] = [
                 {
-                    id: 'BATCH-001',
-                    processorBatchId: 'PROC-2024-001',
+                    id: 'LAB-BATCH-001',
+                    batchId: 'FARM-2024-ASH-001',
                     herb: 'Ashwagandha',
                     weight: 50,
                     farmId: 'FARM-UK-001',
                     labResults: {
                         approved: true,
                         purity: 98.5,
-                        moisture: 8.2
+                        moisture: 8.2,
+                        qualityGrade: 'A+'
                     },
                     labTestDate: '2024-12-01',
-                    processorData: {
-                        processorName: 'Green Valley Processing',
-                        processingDate: '2024-12-05',
-                        packageSize: '50kg bulk'
-                    }
+                    labName: 'NABL Certified Quality Lab',
+                    certificateId: 'CERT-2024-ASH-001'
                 },
                 {
-                    id: 'BATCH-002',
-                    processorBatchId: 'PROC-2024-002',
+                    id: 'LAB-BATCH-002',
+                    batchId: 'FARM-2024-TUL-001',
                     herb: 'Tulsi',
                     weight: 25,
                     farmId: 'FARM-HP-002',
                     labResults: {
                         approved: true,
                         purity: 96.8,
-                        moisture: 9.1
+                        moisture: 9.1,
+                        qualityGrade: 'A'
                     },
                     labTestDate: '2024-12-02',
-                    processorData: {
-                        processorName: 'Himalayan Herbs Processor',
-                        processingDate: '2024-12-06',
-                        packageSize: '25kg bulk'
-                    }
+                    labName: 'AYUSH Quality Testing Center',
+                    certificateId: 'CERT-2024-TUL-002'
                 }
             ]
             setAvailableBatches(mockBatches)
@@ -152,14 +146,8 @@ export default function ManufacturingPage() {
                     {
                         stage: 'Lab Testing',
                         date: selectedBatch.labTestDate,
-                        location: 'NABL Certified Lab',
-                        details: `Purity: ${selectedBatch.labResults?.purity}%, Approved`
-                    },
-                    {
-                        stage: 'Processing',
-                        date: selectedBatch.processorData?.processingDate,
-                        location: selectedBatch.processorData?.processorName,
-                        details: `Processed into ${selectedBatch.processorData?.packageSize}`
+                        location: selectedBatch.labName,
+                        details: `Purity: ${selectedBatch.labResults.purity}%, Grade: ${selectedBatch.labResults.qualityGrade}`
                     }
                 ]
             }
@@ -239,22 +227,22 @@ export default function ManufacturingPage() {
 
             for (const config of packageConfigs) {
                 for (let i = 0; i < config.quantity; i++) {
-                    const packageId = `${selectedBatch.processorBatchId}-PKG-${packageNumber.toString().padStart(4, '0')}`
+                    const packageId = `${selectedBatch.batchId}-PKG-${packageNumber.toString().padStart(4, '0')}`
                     const qrData = JSON.stringify({
                         packageId,
-                        batchId: selectedBatch.processorBatchId,
+                        batchId: selectedBatch.batchId,
                         herb: selectedBatch.herb,
                         weight: `${config.size}${config.unit}`,
                         farmId: selectedBatch.farmId,
-                        labApproved: selectedBatch.labResults?.approved,
-                        purity: selectedBatch.labResults?.purity,
+                        labApproved: selectedBatch.labResults.approved,
+                        purity: selectedBatch.labResults.purity,
                         verificationUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/consumer-portal?package=${packageId}`
                     })
 
                     const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
                         width: 200,
                         margin: 2,
-                        color: { dark: '#014848', light: '#FFFFFF' }
+                        color: { dark: '#016868', light: '#FFFFFF' }
                     })
 
                     packages.push({
@@ -296,32 +284,32 @@ export default function ManufacturingPage() {
                     @media print {
                         .page-break { page-break-after: always; }
                     }
-                    body { font-family: Arial, sans-serif; }
+                    body { font-family: 'Inter', Arial, sans-serif; }
                     .label {
                         width: 10cm;
                         height: 7cm;
-                        border: 2px solid #014848;
+                        border: 2px solid #016868;
                         padding: 15px;
                         margin: 10px;
                         display: inline-block;
                         page-break-inside: avoid;
                     }
-                    .header { text-align: center; color: #014848; font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+                    .header { text-align: center; color: #016868; font-weight: bold; font-size: 18px; margin-bottom: 10px; }
                     .qr-code { text-align: center; margin: 10px 0; }
                     .info { font-size: 11px; line-height: 1.4; }
-                    .info strong { color: #014848; }
+                    .info strong { color: #016868; }
                 </style>
             </head>
             <body>
                 ${finalPackages.map(pkg => `
                     <div class="label">
-                        <div class="header">🌿 ANVESHA</div>
+                        <div class="header">ANVESHA</div>
                         <div class="info">
                             <strong>Product:</strong> ${productInfo.productName}<br>
                             <strong>Herb:</strong> ${selectedBatch?.herb}<br>
                             <strong>Weight:</strong> ${pkg.weight < 1000 ? pkg.weight + 'g' : (pkg.weight / 1000) + 'kg'}<br>
                             <strong>Package:</strong> ${pkg.id}<br>
-                            <strong>Purity:</strong> ${selectedBatch?.labResults?.purity}%
+                            <strong>Purity:</strong> ${selectedBatch?.labResults.purity}%
                         </div>
                         <div class="qr-code">
                             <img src="${pkg.qrCode}" width="120" />
@@ -350,7 +338,7 @@ export default function ManufacturingPage() {
             // Mock implementation
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            alert(`✅ Successfully dispatched ${finalPackages.length} packages!\n\nInventory updated and packages marked as dispatched.`)
+            alert(`Successfully dispatched ${finalPackages.length} packages!\n\nInventory updated and packages marked as dispatched.`)
 
             // Reset workflow
             setCurrentStep(1)
@@ -372,17 +360,57 @@ export default function ManufacturingPage() {
     }
 
     const steps = [
-        { number: 1, title: 'Verify Batch', icon: '✓' },
-        { number: 2, title: 'Configure Packaging', icon: '📦' },
-        { number: 3, title: 'Generate QR Codes', icon: '📱' },
-        { number: 4, title: 'Product Details', icon: '📋' },
-        { number: 5, title: 'Print & Dispatch', icon: '🚚' }
+        {
+            number: 1,
+            title: 'Verify Batch',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            )
+        },
+        {
+            number: 2,
+            title: 'Configure Packaging',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+            )
+        },
+        {
+            number: 3,
+            title: 'Generate QR Codes',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+            )
+        },
+        {
+            number: 4,
+            title: 'Product Details',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            )
+        },
+        {
+            number: 5,
+            title: 'Print & Dispatch',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+            )
+        }
     ]
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 font-['Inter',sans-serif]">
             {/* Header */}
-            <div className="bg-[#014848] text-white p-6 shadow-lg">
+            <div className="bg-[#016868] text-white p-6 shadow-lg">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white rounded-lg p-2">
@@ -409,13 +437,17 @@ export default function ManufacturingPage() {
                         {steps.map((step, index) => (
                             <div key={step.number} className="flex items-center flex-1">
                                 <div className="flex flex-col items-center flex-1">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all ${currentStep > step.number
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all ${currentStep > step.number
                                             ? 'bg-green-500 text-white'
                                             : currentStep === step.number
-                                                ? 'bg-[#014848] text-white ring-4 ring-teal-100'
+                                                ? 'bg-[#016868] text-white ring-4 ring-[#016868]/20'
                                                 : 'bg-gray-200 text-gray-500'
                                         }`}>
-                                        {currentStep > step.number ? '✓' : step.icon}
+                                        {currentStep > step.number ? (
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        ) : step.icon}
                                     </div>
                                     <div className={`mt-2 text-sm font-semibold text-center ${currentStep >= step.number ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
@@ -438,12 +470,12 @@ export default function ManufacturingPage() {
                 {currentStep === 1 && (
                     <div className="space-y-6">
                         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Processor Batch to Verify</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Lab-Tested Batch to Verify</h2>
 
                             {isLoading ? (
                                 <div className="text-center py-12">
-                                    <div className="animate-spin w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full mx-auto"></div>
-                                    <p className="mt-4 text-gray-600">Loading batches...</p>
+                                    <div className="animate-spin w-12 h-12 border-4 border-[#016868] border-t-transparent rounded-full mx-auto"></div>
+                                    <p className="mt-4 text-gray-600 font-semibold">Loading batches...</p>
                                 </div>
                             ) : (
                                 <div className="grid md:grid-cols-2 gap-4">
@@ -452,17 +484,22 @@ export default function ManufacturingPage() {
                                             key={batch.id}
                                             onClick={() => setSelectedBatch(batch)}
                                             className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${selectedBatch?.id === batch.id
-                                                    ? 'border-[#014848] bg-teal-50 shadow-md'
-                                                    : 'border-gray-200 hover:border-teal-300 hover:shadow-sm'
+                                                    ? 'border-[#016868] bg-[#016868]/5 shadow-md'
+                                                    : 'border-gray-200 hover:border-[#016868]/50 hover:shadow-sm'
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
-                                                    <div className="font-bold text-lg text-gray-900">{batch.processorBatchId}</div>
-                                                    <div className="text-teal-700 font-semibold mt-1">🌿 {batch.herb}</div>
+                                                    <div className="font-bold text-lg text-gray-900">{batch.batchId}</div>
+                                                    <div className="text-[#016868] font-semibold mt-1 flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                        </svg>
+                                                        {batch.herb}
+                                                    </div>
                                                 </div>
                                                 {selectedBatch?.id === batch.id && (
-                                                    <div className="w-6 h-6 bg-[#014848] rounded-full flex items-center justify-center">
+                                                    <div className="w-6 h-6 bg-[#016868] rounded-full flex items-center justify-center">
                                                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                         </svg>
@@ -471,23 +508,32 @@ export default function ManufacturingPage() {
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3 text-sm">
-                                                <div className="bg-white p-2 rounded">
+                                                <div className="bg-white p-2 rounded border border-gray-100">
                                                     <span className="text-gray-500">Weight:</span>
                                                     <span className="font-semibold text-gray-900 ml-1">{batch.weight}kg</span>
                                                 </div>
-                                                <div className="bg-white p-2 rounded">
+                                                <div className="bg-white p-2 rounded border border-gray-100">
                                                     <span className="text-gray-500">Purity:</span>
-                                                    <span className="font-semibold text-green-600 ml-1">{batch.labResults?.purity}%</span>
+                                                    <span className="font-semibold text-green-600 ml-1">{batch.labResults.purity}%</span>
                                                 </div>
-                                                <div className="bg-white p-2 rounded col-span-2">
-                                                    <span className="text-gray-500">Processor:</span>
-                                                    <span className="font-semibold text-gray-900 ml-1 text-xs">{batch.processorData?.processorName}</span>
+                                                <div className="bg-white p-2 rounded col-span-2 border border-gray-100">
+                                                    <span className="text-gray-500">Lab:</span>
+                                                    <span className="font-semibold text-gray-900 ml-1 text-xs">{batch.labName}</span>
                                                 </div>
                                             </div>
 
-                                            <div className="mt-3">
-                                                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                                    ✓ Lab Approved
+                                            <div className="mt-3 flex items-center gap-2">
+                                                <span className={`px-3 py-1 text-xs font-bold rounded-full ${batch.labResults.qualityGrade === 'A+'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    Grade {batch.labResults.qualityGrade}
+                                                </span>
+                                                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
+                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Lab Approved
                                                 </span>
                                             </div>
                                         </div>
@@ -501,9 +547,12 @@ export default function ManufacturingPage() {
                                 <button
                                     onClick={handleVerifyBatch}
                                     disabled={isLoading}
-                                    className="bg-[#014848] hover:bg-[#003636] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all disabled:opacity-50"
+                                    className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
                                 >
-                                    Verify Batch & Continue →
+                                    Verify Batch & Continue
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
                                 </button>
                             </div>
                         )}
@@ -515,16 +564,21 @@ export default function ManufacturingPage() {
                     <div className="space-y-6">
                         <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">Configure Final Packaging</h2>
-                            <p className="text-gray-600 mb-6">Convert bulk package ({selectedBatch.weight}kg) into retail sizes</p>
+                            <p className="text-gray-600 mb-6 font-semibold">Convert bulk package ({selectedBatch.weight}kg) into retail sizes</p>
 
                             {/* Supply Chain Timeline */}
                             {verificationData && (
-                                <div className="mb-6 p-4 bg-teal-50 rounded-lg border border-teal-200">
-                                    <h3 className="font-bold text-teal-900 mb-3">✓ Batch Verified - Supply Chain History</h3>
+                                <div className="mb-6 p-4 bg-[#016868]/5 rounded-lg border border-[#016868]/20">
+                                    <h3 className="font-bold text-[#016868] mb-3 flex items-center gap-2">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Batch Verified - Supply Chain History
+                                    </h3>
                                     <div className="space-y-2">
                                         {verificationData.supplyChainHistory.map((stage: any, index: number) => (
                                             <div key={index} className="flex items-start gap-3">
-                                                <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                                <div className="w-8 h-8 bg-[#016868] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                                     {index + 1}
                                                 </div>
                                                 <div className="flex-1">
@@ -541,7 +595,7 @@ export default function ManufacturingPage() {
                             {/* Package Configuration */}
                             <div className="space-y-4">
                                 {packageConfigs.map((config, index) => (
-                                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                         <div className="flex-1">
                                             <div className="font-semibold text-gray-900">
                                                 {config.size}{config.unit} Packages
@@ -553,7 +607,7 @@ export default function ManufacturingPage() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => updatePackageQuantity(index, config.quantity - 1)}
-                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-teal-500 transition-colors font-bold"
+                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-[#016868] transition-colors font-bold"
                                             >
                                                 -
                                             </button>
@@ -565,7 +619,7 @@ export default function ManufacturingPage() {
                                             />
                                             <button
                                                 onClick={() => updatePackageQuantity(index, config.quantity + 1)}
-                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-teal-500 transition-colors font-bold"
+                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-[#016868] transition-colors font-bold"
                                             >
                                                 +
                                             </button>
@@ -600,19 +654,19 @@ export default function ManufacturingPage() {
                             </div>
 
                             {/* Summary */}
-                            <div className="mt-6 p-4 bg-gradient-to-r from-teal-50 to-green-50 rounded-lg border-2 border-teal-200">
+                            <div className="mt-6 p-4 bg-gradient-to-r from-[#016868]/10 to-green-50 rounded-lg border-2 border-[#016868]/20">
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
-                                        <div className="text-2xl font-bold text-teal-700">{calculateTotalPackages()}</div>
-                                        <div className="text-sm text-gray-600">Total Packages</div>
+                                        <div className="text-2xl font-bold text-[#016868]">{calculateTotalPackages()}</div>
+                                        <div className="text-sm text-gray-600 font-semibold">Total Packages</div>
                                     </div>
                                     <div>
-                                        <div className="text-2xl font-bold text-teal-700">{calculateUsedWeight().toFixed(2)}kg</div>
-                                        <div className="text-sm text-gray-600">Weight Used</div>
+                                        <div className="text-2xl font-bold text-[#016868]">{calculateUsedWeight().toFixed(2)}kg</div>
+                                        <div className="text-sm text-gray-600 font-semibold">Weight Used</div>
                                     </div>
                                     <div>
                                         <div className="text-2xl font-bold text-gray-600">{(selectedBatch.weight - calculateUsedWeight()).toFixed(2)}kg</div>
-                                        <div className="text-sm text-gray-600">Remaining</div>
+                                        <div className="text-sm text-gray-600 font-semibold">Remaining</div>
                                     </div>
                                 </div>
                             </div>
@@ -621,15 +675,21 @@ export default function ManufacturingPage() {
                         <div className="flex justify-between">
                             <button
                                 onClick={() => setCurrentStep(1)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors"
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
                             >
-                                ← Back
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Back
                             </button>
                             <button
                                 onClick={proceedToQRGeneration}
-                                className="bg-[#014848] hover:bg-[#003636] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all"
+                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
                             >
-                                Generate QR Codes →
+                                Generate QR Codes
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -645,28 +705,32 @@ export default function ManufacturingPage() {
                                 <div className="text-center py-12">
                                     {isLoading ? (
                                         <>
-                                            <div className="animate-spin w-16 h-16 border-4 border-teal-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                                            <div className="animate-spin w-16 h-16 border-4 border-[#016868] border-t-transparent rounded-full mx-auto mb-4"></div>
                                             <p className="text-lg font-semibold text-gray-900">Generating QR Codes...</p>
                                             <div className="mt-4 max-w-md mx-auto">
                                                 <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
                                                     <div
-                                                        className="bg-teal-600 h-full transition-all duration-300"
+                                                        className="bg-[#016868] h-full transition-all duration-300"
                                                         style={{ width: `${qrGenerationProgress}%` }}
                                                     />
                                                 </div>
-                                                <p className="mt-2 text-sm text-gray-600">{qrGenerationProgress}% Complete</p>
+                                                <p className="mt-2 text-sm text-gray-600 font-semibold">{qrGenerationProgress}% Complete</p>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="text-6xl mb-4">📱</div>
+                                            <div className="mb-4">
+                                                <svg className="w-16 h-16 mx-auto text-[#016868]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                                </svg>
+                                            </div>
                                             <p className="text-lg font-semibold text-gray-900 mb-2">Ready to Generate QR Codes</p>
-                                            <p className="text-gray-600 mb-6">
+                                            <p className="text-gray-600 mb-6 font-semibold">
                                                 {calculateTotalPackages()} unique QR codes will be generated with blockchain verification
                                             </p>
                                             <button
                                                 onClick={generateFinalQRCodes}
-                                                className="bg-[#014848] hover:bg-[#003636] text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-all"
+                                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-all"
                                             >
                                                 Generate {calculateTotalPackages()} QR Codes
                                             </button>
@@ -682,7 +746,7 @@ export default function ManufacturingPage() {
                                             </svg>
                                             <span className="font-bold text-green-900">Successfully Generated {finalPackages.length} QR Codes</span>
                                         </div>
-                                        <div className="text-sm text-green-800">
+                                        <div className="text-sm text-green-800 font-semibold">
                                             <strong>Blockchain Transaction:</strong>
                                             <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{blockchainTxHash}</code>
                                         </div>
@@ -698,7 +762,7 @@ export default function ManufacturingPage() {
                                         ))}
                                     </div>
                                     {finalPackages.length > 12 && (
-                                        <p className="text-center text-sm text-gray-500 mt-4">
+                                        <p className="text-center text-sm text-gray-500 mt-4 font-semibold">
                                             Showing 12 of {finalPackages.length} packages
                                         </p>
                                     )}
@@ -710,15 +774,21 @@ export default function ManufacturingPage() {
                             <div className="flex justify-between">
                                 <button
                                     onClick={() => setCurrentStep(2)}
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors"
+                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
                                 >
-                                    ← Back
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Back
                                 </button>
                                 <button
                                     onClick={() => setCurrentStep(4)}
-                                    className="bg-[#014848] hover:bg-[#003636] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all"
+                                    className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
                                 >
-                                    Add Product Details →
+                                    Add Product Details
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
                                 </button>
                             </div>
                         )}
@@ -739,7 +809,7 @@ export default function ManufacturingPage() {
                                             type="text"
                                             value={productInfo.productName}
                                             onChange={(e) => setProductInfo({ ...productInfo, productName: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                             placeholder="e.g., Ashwagandha Root Extract"
                                         />
                                     </div>
@@ -749,7 +819,7 @@ export default function ManufacturingPage() {
                                             type="text"
                                             value={productInfo.manufacturerName}
                                             onChange={(e) => setProductInfo({ ...productInfo, manufacturerName: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                             placeholder="Company name"
                                         />
                                     </div>
@@ -761,7 +831,7 @@ export default function ManufacturingPage() {
                                         value={productInfo.description}
                                         onChange={(e) => setProductInfo({ ...productInfo, description: e.target.value })}
                                         rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                         placeholder="Product description..."
                                     />
                                 </div>
@@ -772,7 +842,7 @@ export default function ManufacturingPage() {
                                         value={productInfo.benefits}
                                         onChange={(e) => setProductInfo({ ...productInfo, benefits: e.target.value })}
                                         rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                         placeholder="Key benefits..."
                                     />
                                 </div>
@@ -783,7 +853,7 @@ export default function ManufacturingPage() {
                                         value={productInfo.usage}
                                         onChange={(e) => setProductInfo({ ...productInfo, usage: e.target.value })}
                                         rows={2}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                         placeholder="How to use..."
                                     />
                                 </div>
@@ -795,7 +865,7 @@ export default function ManufacturingPage() {
                                             type="text"
                                             value={productInfo.manufacturerLicense}
                                             onChange={(e) => setProductInfo({ ...productInfo, manufacturerLicense: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                             placeholder="Manufacturing license"
                                         />
                                     </div>
@@ -804,7 +874,7 @@ export default function ManufacturingPage() {
                                         <select
                                             value={productInfo.expiryMonths}
                                             onChange={(e) => setProductInfo({ ...productInfo, expiryMonths: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                         >
                                             <option value="12">12 Months</option>
                                             <option value="18">18 Months</option>
@@ -819,15 +889,21 @@ export default function ManufacturingPage() {
                         <div className="flex justify-between">
                             <button
                                 onClick={() => setCurrentStep(3)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors"
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
                             >
-                                ← Back
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Back
                             </button>
                             <button
                                 onClick={() => setCurrentStep(5)}
-                                className="bg-[#014848] hover:bg-[#003636] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all"
+                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
                             >
-                                Proceed to Dispatch →
+                                Proceed to Dispatch
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -840,8 +916,8 @@ export default function ManufacturingPage() {
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Print Labels & Dispatch</h2>
 
                             <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="p-6 bg-gradient-to-br from-teal-50 to-green-50 rounded-lg border-2 border-teal-200">
-                                    <div className="text-4xl font-bold text-teal-700 mb-2">{finalPackages.length}</div>
+                                <div className="p-6 bg-gradient-to-br from-[#016868]/10 to-green-50 rounded-lg border-2 border-[#016868]/20">
+                                    <div className="text-4xl font-bold text-[#016868] mb-2">{finalPackages.length}</div>
                                     <div className="text-gray-700 font-semibold">Total Packages Ready</div>
                                 </div>
                                 <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border-2 border-blue-200">
@@ -857,7 +933,7 @@ export default function ManufacturingPage() {
                                         type="date"
                                         value={dispatchDate}
                                         onChange={(e) => setDispatchDate(e.target.value)}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                     />
                                 </div>
                                 <div>
@@ -866,7 +942,7 @@ export default function ManufacturingPage() {
                                         value={dispatchNotes}
                                         onChange={(e) => setDispatchNotes(e.target.value)}
                                         rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-teal-500 outline-none"
+                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
                                         placeholder="Add any dispatch notes..."
                                     />
                                 </div>
@@ -898,9 +974,12 @@ export default function ManufacturingPage() {
                         <div className="flex justify-between">
                             <button
                                 onClick={() => setCurrentStep(4)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors"
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
                             >
-                                ← Back
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Back
                             </button>
                         </div>
                     </div>

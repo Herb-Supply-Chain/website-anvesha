@@ -101,9 +101,13 @@ function LoginCard({ language, t }: LoginCardProps) {
                         <p className="text-xs text-center text-blue-800 font-medium mb-2">
                             {t[language].securePortal}
                         </p>
-                        <p className="text-xs text-center text-gray-600">
-                            Demo: processor@ayush.gov.in / pass123
-                        </p>
+                        <div className="text-xs text-gray-700 space-y-1">
+                            <p className="font-semibold text-center mb-2">Demo Credentials:</p>
+                            <p className="text-center"><strong>Admin:</strong> admin@ayush.gov.in / admin123</p>
+                            <p className="text-center"><strong>Lab:</strong> lab@ayush.gov.in / lab123</p>
+                            <p className="text-center"><strong>Processor:</strong> processor@ayush.gov.in / processor123</p>
+                            <p className="text-center"><strong>Manufacturer:</strong> manufacturer@ayush.gov.in / manufacturer123</p>
+                        </div>
                     </div>
                 </div>
             </form>

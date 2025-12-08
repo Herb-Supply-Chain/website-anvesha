@@ -117,7 +117,7 @@ export default function ProcessorQRPackaging() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-gradient-to-r from-teal-700 to-teal-600 text-white shadow-lg">
+            <div className="bg-[#016868] text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-lg p-1.5">
@@ -168,7 +168,7 @@ export default function ProcessorQRPackaging() {
                             >
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex-1">
-                                        <div className="font-bold text-sm text-teal-700">{batch.id}</div>
+                                        <div className="font-bold text-sm text-[#016868]">{batch.id}</div>
                                         <div className="font-semibold text-gray-900 mt-1">{batch.herb}</div>
                                     </div>
                                     {selectedBatch?.id === batch.id && (
@@ -181,8 +181,8 @@ export default function ProcessorQRPackaging() {
                                     <div className="flex items-center justify-between">
                                         <span>{batch.quantity}kg</span>
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${batch.qualityGrade === 'A+' ? 'bg-green-100 text-green-700' :
-                                                batch.qualityGrade === 'A' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                            batch.qualityGrade === 'A' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {batch.qualityGrade}
                                         </span>
@@ -214,7 +214,7 @@ export default function ProcessorQRPackaging() {
                                     </div>
                                     <div>
                                         <div className="text-xs text-gray-500 mb-1">Processor Batch</div>
-                                        <div className="font-semibold text-teal-600">{selectedBatch.id}</div>
+                                        <div className="font-semibold text-[#016868]">{selectedBatch.id}</div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-gray-500 mb-1">Total Quantity</div>
@@ -242,7 +242,7 @@ export default function ProcessorQRPackaging() {
                                             value={numberOfPackages}
                                             onChange={(e) => setNumberOfPackages(e.target.value)}
                                             min="1"
-                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none font-semibold text-teal-600"
+                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#016868] focus:ring-2 focus:ring-[#016868]/20 outline-none font-semibold text-[#016868]"
                                         />
                                     </div>
                                 </div>
@@ -260,7 +260,7 @@ export default function ProcessorQRPackaging() {
                                         <select
                                             value={packageSize}
                                             onChange={(e) => setPackageSize(e.target.value)}
-                                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none"
+                                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-[#016868] focus:ring-2 focus:ring-[#016868]/20 outline-none font-semibold text-gray-700"
                                         >
                                             <option value="25">25kg</option>
                                             <option value="50">50kg</option>
@@ -278,7 +278,7 @@ export default function ProcessorQRPackaging() {
                                                     key={size}
                                                     onClick={() => setQRSize(size)}
                                                     className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${qrSize === size
-                                                        ? 'bg-teal-600 text-white shadow-md'
+                                                        ? 'bg-[#016868] text-white shadow-md'
                                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                         }`}
                                                 >
@@ -298,7 +298,7 @@ export default function ProcessorQRPackaging() {
                                                     key={color}
                                                     onClick={() => setQRColor(color)}
                                                     className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${qrColor === color
-                                                        ? 'bg-teal-600 text-white shadow-md'
+                                                        ? 'bg-[#016868] text-white shadow-md'
                                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                         }`}
                                                 >
@@ -330,7 +330,7 @@ export default function ProcessorQRPackaging() {
                                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border-2 border-gray-200">
                                     <h4 className="font-bold text-sm text-gray-900 mb-3 text-center">Package Label Preview</h4>
                                     <div className="bg-white rounded-lg p-4 border border-gray-300 space-y-2">
-                                        <div className="font-bold text-teal-700 text-center">{selectedBatch.herb} Root Powder</div>
+                                        <div className="font-bold text-[#016868] text-center">{selectedBatch.herb} Root Powder</div>
                                         <div className="text-sm text-gray-600 text-center">Net Wt: {packageSize}kg</div>
                                         <div className="text-xs text-gray-600 text-center">Batch: {selectedBatch.id}</div>
                                         <div className="text-xs text-gray-600 text-center">Exp: 01/2026</div>
@@ -343,7 +343,7 @@ export default function ProcessorQRPackaging() {
                             <div className="space-y-3">
                                 <button
                                     onClick={handleGenerateQRCodes}
-                                    className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg"
+                                    className="w-full bg-[#016868] hover:bg-[#014d4d] text-white font-bold py-4 rounded-lg transition-all shadow-md hover:shadow-lg"
                                 >
                                     Generate QR codes
                                 </button>
@@ -401,7 +401,7 @@ export default function ProcessorQRPackaging() {
                                                     {pkg.qrStatus === 'Generated' && (
                                                         <button
                                                             onClick={() => handleMarkAsPrinted(pkg.id)}
-                                                            className="text-xs bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded transition-colors"
+                                                            className="text-xs bg-[#016868] hover:bg-[#014d4d] text-white px-3 py-1 rounded transition-colors"
                                                         >
                                                             Mark Printed
                                                         </button>

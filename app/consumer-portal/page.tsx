@@ -232,9 +232,9 @@ Blockchain-Verified Traceability System
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white font-['Inter',sans-serif]">
             {/* Header */}
-            <header className="border-b border-teal-800 py-5 px-6 bg-[#014848] sticky top-0 z-50 shadow-md">
+            <header className="border-b border-[#176a6a] py-5 px-6 bg-[#176a6a] sticky top-0 z-50 shadow-md">
                 <div className="max-w-6xl mx-auto">
                     <Link href="/" className="inline-flex items-center gap-2 text-teal-50 hover:text-white transition-colors text-sm font-medium">
                         <span>←</span>
