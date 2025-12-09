@@ -30,6 +30,7 @@ interface PendingRegistration {
 }
 
 export default function AdminPage() {
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
     const [activeSection, setActiveSection] = useState('approve-registrations')
     const [showApprovals, setShowApprovals] = useState(true)
     const [selectedRegistration, setSelectedRegistration] = useState<PendingRegistration | null>(null)
@@ -64,6 +65,30 @@ export default function AdminPage() {
     const mapRef = useRef<HTMLDivElement>(null)
     const mapInstanceRef = useRef<any>(null)
     const rectangleRef = useRef<any>(null)
+    const approvedRectanglesRef = useRef<any[]>([])
+    const [approvedZones, setApprovedZones] = useState<any[]>([])
+
+    const fetchApprovedZones = async () => {
+        try {
+            const token = getToken()
+            const headers: HeadersInit = { 'Content-Type': 'application/json' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+            const res = await fetch(`${API_BASE}/api/geofencing/zones/approved`, { headers })
+            if (!res.ok) throw new Error('Failed to load approved zones')
+            const data = await res.json()
+            const zones = data?.data || data?.zones || []
+            setApprovedZones(zones)
+            setMapUpdateTrigger(prev => prev + 1)
+        } catch (err) {
+            console.warn('Could not load approved zones', err)
+        }
+    }
+
+    useEffect(() => {
+        if (activeSection === 'geo-fencing') {
+            fetchApprovedZones()
+        }
+    }, [activeSection])
 
     // Helper function to get token from cookies or localStorage
     const getToken = () => {
@@ -217,14 +242,16 @@ export default function AdminPage() {
                     mapInstanceRef.current.setCenter({ lat: centerLat, lng: centerLng })
                 }
                 
-                // Remove existing rectangle
+                // Clear previous rectangles
                 if (rectangleRef.current) {
                     rectangleRef.current.setMap(null)
                     rectangleRef.current = null
                 }
+                approvedRectanglesRef.current.forEach(r => r.setMap(null))
+                approvedRectanglesRef.current = []
 
+                // Draw current input rectangle if valid
                 if (coordsValid) {
-                    // Create rectangle for geo-fenced area
                     rectangleRef.current = new google.maps.Rectangle({
                         bounds: {
                             north: maxLat!,
@@ -251,6 +278,35 @@ export default function AdminPage() {
                     )
                     mapInstanceRef.current.fitBounds(bounds, { padding: 50 })
                 }
+
+                // Draw approved zones
+                approvedZones.forEach(zone => {
+                    if (
+                        zone.minLatitude !== undefined &&
+                        zone.maxLatitude !== undefined &&
+                        zone.minLongitude !== undefined &&
+                        zone.maxLongitude !== undefined
+                    ) {
+                        const rect = new google.maps.Rectangle({
+                            bounds: {
+                                north: zone.maxLatitude,
+                                south: zone.minLatitude,
+                                east: zone.maxLongitude,
+                                west: zone.minLongitude
+                            },
+                            editable: false,
+                            draggable: false,
+                            fillColor: '#0f172a',
+                            fillOpacity: 0.08,
+                            strokeColor: '#1d4ed8',
+                            strokeOpacity: 0.9,
+                            strokeWeight: 2,
+                            strokePosition: google.maps.StrokePosition.CENTER
+                        })
+                        rect.setMap(mapInstanceRef.current)
+                        approvedRectanglesRef.current.push(rect)
+                    }
+                })
                 
                 // Use setTimeout to ensure map renders before hiding loading
                 setTimeout(() => {
@@ -1373,7 +1429,7 @@ export default function AdminPage() {
                                             headers['Authorization'] = `Bearer ${token}`
                                         }
                                         
-                                        const response = await fetch('http://192.168.50.154:3000/api/geofencing/zones', {
+            const response = await fetch(`${API_BASE}/api/geofencing/zones`, {
                                             method: 'POST',
                                             headers,
                                             body: JSON.stringify({
@@ -1394,6 +1450,7 @@ export default function AdminPage() {
                                             setShowMap(true)
                                             // Force map update by incrementing trigger
                                             setMapUpdateTrigger(prev => prev + 1)
+                                            fetchApprovedZones()
                                             // Auto-hide success message after 5 seconds
                                             setTimeout(() => {
                                                 setGeoFencingSuccess(false)
@@ -1695,6 +1752,33 @@ export default function AdminPage() {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+
+                            {/* Approved Zones */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-lg font-bold text-gray-900">Approved Zones</h4>
+                                    <button
+                                        type="button"
+                                        onClick={fetchApprovedZones}
+                                        className="text-sm font-semibold text-[#016868] hover:text-[#014d4d]"
+                                    >
+                                        Refresh
+                                    </button>
+                                </div>
+                                {approvedZones.length === 0 ? (
+                                    <p className="text-sm text-gray-600">No approved zones yet.</p>
+                                ) : (
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {approvedZones.map((zone, idx) => (
+                                            <div key={zone.id || zone.name || idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                                <p className="text-sm font-bold text-gray-900 truncate">{zone.name || 'Unnamed Zone'}</p>
+                                                <p className="text-xs text-gray-600 mt-1">Lat: {zone.minLatitude} → {zone.maxLatitude}</p>
+                                                <p className="text-xs text-gray-600">Lng: {zone.minLongitude} → {zone.maxLongitude}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Google Map Display - Shows dynamically as coordinates are entered */}

@@ -2,21 +2,33 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function ProcessorPage() {
     const router = useRouter()
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [numberOfBarcodes, setNumberOfBarcodes] = useState('10')
     const [isGenerating, setIsGenerating] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [formData, setFormData] = useState({
         batchId: '',
-        weight: '',
-        processDescription: ''
+        processType: '',
+        startTime: '',
+        endTime: '',
+        temperature: '',
+        outputWeight: '',
+        ipfsHash: '',
+        remarks: ''
     })
     const [formErrors, setFormErrors] = useState({
         batchId: '',
-        weight: ''
+        processType: '',
+        startTime: '',
+        endTime: '',
+        temperature: '',
+        outputWeight: '',
+        ipfsHash: ''
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -51,7 +63,7 @@ export default function ProcessorPage() {
         }
         
         return null
-    }
+    }   
 
     // Check authentication on mount
     useEffect(() => {
@@ -75,7 +87,6 @@ export default function ProcessorPage() {
             alert('Please enter a valid number between 1 and 1000')
             return
         }
-
         setIsGenerating(true)
 
         try {
@@ -93,7 +104,7 @@ export default function ProcessorPage() {
             let batchIds: string[] = []
             
             try {
-                const response = await fetch('http://192.168.50.154:3000/api/batch-ids', {
+                const response = await fetch(`${API_BASE}/api/batch-ids`, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify({
@@ -357,20 +368,32 @@ export default function ProcessorPage() {
     const validateForm = () => {
         const errors = {
             batchId: '',
-            weight: ''
+            processType: '',
+            startTime: '',
+            endTime: '',
+            temperature: '',
+            outputWeight: '',
+            ipfsHash: ''
         }
         let isValid = true
 
-        if (!formData.batchId.trim()) {
-            errors.batchId = 'Batch ID is required'
+        const requiredFields: (keyof typeof errors)[] = ['batchId', 'processType', 'startTime', 'endTime', 'temperature', 'outputWeight', 'ipfsHash']
+        requiredFields.forEach((field) => {
+            if (!formData[field].trim()) {
+                errors[field] = 'Required'
+                isValid = false
+            }
+        })
+
+        const temp = parseFloat(formData.temperature)
+        if (formData.temperature && (isNaN(temp))) {
+            errors.temperature = 'Enter a valid number'
             isValid = false
         }
 
-        if (!formData.weight.trim()) {
-            errors.weight = 'Weight is required'
-            isValid = false
-        } else if (isNaN(parseFloat(formData.weight)) || parseFloat(formData.weight) <= 0) {
-            errors.weight = 'Weight must be a valid positive number'
+        const output = parseFloat(formData.outputWeight)
+        if (formData.outputWeight && (isNaN(output) || output <= 0)) {
+            errors.outputWeight = 'Must be a positive number'
             isValid = false
         }
 
@@ -387,17 +410,42 @@ export default function ProcessorPage() {
 
         setIsSubmitting(true)
         try {
-            // TODO: Make API call here
-            console.log('Form data:', formData)
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            alert('✅ Data added successfully!')
+            const token = getToken()
+            const headers: HeadersInit = { 'Content-Type': 'application/json' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
+            const payload = {
+                batchId: formData.batchId,
+                processType: formData.processType,
+                startTime: formData.startTime,
+                endTime: formData.endTime,
+                temperature: formData.temperature ? Number(formData.temperature) : null,
+                outputWeight: formData.outputWeight ? Number(formData.outputWeight) : null,
+                ipfsHash: formData.ipfsHash,
+                remarks: formData.remarks || ''
+            }
+
+            const res = await fetch(`${API_BASE}/api/processing/upload`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            })
+
+            const data = await res.json()
+            if (!res.ok) {
+                throw new Error(data?.message || 'Failed to upload processing data')
+            }
+
+            alert('✅ Processing data uploaded')
             setFormData({
                 batchId: '',
-                weight: '',
-                processDescription: ''
+                processType: '',
+                startTime: '',
+                endTime: '',
+                temperature: '',
+                outputWeight: '',
+                ipfsHash: '',
+                remarks: ''
             })
             setShowForm(false)
         } catch (error) {
@@ -411,12 +459,22 @@ export default function ProcessorPage() {
     const handleCloseForm = () => {
         setFormData({
             batchId: '',
-            weight: '',
-            processDescription: ''
+            processType: '',
+            startTime: '',
+            endTime: '',
+            temperature: '',
+            outputWeight: '',
+            ipfsHash: '',
+            remarks: ''
         })
         setFormErrors({
             batchId: '',
-            weight: ''
+            processType: '',
+            startTime: '',
+            endTime: '',
+            temperature: '',
+            outputWeight: '',
+            ipfsHash: ''
         })
         setShowForm(false)
     }
@@ -500,9 +558,9 @@ export default function ProcessorPage() {
 
                     <div className="p-6 sm:p-8 lg:p-10">
                         <div className="text-center mb-8">
-                            {/* Number of Barcodes Input */}
-                            <div className="max-w-md mx-auto mb-8">
-                                <label className="block text-sm font-semibold text-gray-900 mb-4">
+                            {/* Barcode Generation Inputs */}
+                            <div className="max-w-md mx-auto mb-6 space-y-2">
+                                <label className="block text-sm font-semibold text-gray-900">
                                     Number of Barcodes to Generate
                                 </label>
                                 <div className="relative">
@@ -512,16 +570,16 @@ export default function ProcessorPage() {
                                         onChange={(e) => setNumberOfBarcodes(e.target.value)}
                                         min="1"
                                         max="1000"
-                                        className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all hover:border-gray-300 font-semibold text-center text-lg"
+                                        className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all hover:border-gray-300 font-semibold"
                                         placeholder="Enter number"
                                     />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                                         </svg>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-3 font-medium">Enter a number between 1 and 1000</p>
+                                <p className="text-xs text-gray-500 font-medium">Enter a number between 1 and 1000</p>
                             </div>
 
                             {/* Generate Button */}
@@ -594,78 +652,197 @@ export default function ProcessorPage() {
                         </div>
 
                         <form onSubmit={handleFormSubmit} className="p-4 sm:p-6 lg:p-8 space-y-6">
-                            {/* Batch ID */}
-                            <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
-                                <label htmlFor="batchId" className="block text-sm font-bold text-gray-900 mb-3">
-                                    Batch ID <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="batchId"
-                                    name="batchId"
-                                    value={formData.batchId}
-                                    onChange={handleFormChange}
-                                    className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
-                                        formErrors.batchId
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
-                                            : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
-                                    }`}
-                                    placeholder="Enter batch ID"
-                                />
-                                {formErrors.batchId && (
-                                    <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {formErrors.batchId}
-                                    </p>
-                                )}
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="batchId" className="block text-sm font-bold text-gray-900 mb-3">
+                                        Batch ID <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="batchId"
+                                        name="batchId"
+                                        value={formData.batchId}
+                                        onChange={handleFormChange}
+                                        className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                            formErrors.batchId
+                                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                        }`}
+                                        placeholder="Enter batch ID"
+                                    />
+                                    {formErrors.batchId && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.batchId}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Weight */}
-                            <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
-                                <label htmlFor="weight" className="block text-sm font-bold text-gray-900 mb-3">
-                                    Weight <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    id="weight"
-                                    name="weight"
-                                    value={formData.weight}
-                                    onChange={handleFormChange}
-                                    step="0.01"
-                                    min="0"
-                                    className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
-                                        formErrors.weight
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
-                                            : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
-                                    }`}
-                                    placeholder="Enter weight (e.g., 10.5)"
-                                />
-                                {formErrors.weight && (
-                                    <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {formErrors.weight}
-                                    </p>
-                                )}
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="processType" className="block text-sm font-bold text-gray-900 mb-3">
+                                        Process Type <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="processType"
+                                        name="processType"
+                                        value={formData.processType}
+                                        onChange={handleFormChange}
+                                        className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                            formErrors.processType
+                                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                        }`}
+                                        placeholder="Drying / Milling / Packaging"
+                                    />
+                                    {formErrors.processType && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.processType}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label className="block text-sm font-bold text-gray-900 mb-3">
+                                        Processing Window <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="datetime-local"
+                                            name="startTime"
+                                            value={formData.startTime}
+                                            onChange={handleFormChange}
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                                formErrors.startTime
+                                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                    : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                            }`}
+                                        />
+                                        <input
+                                            type="datetime-local"
+                                            name="endTime"
+                                            value={formData.endTime}
+                                            onChange={handleFormChange}
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                                formErrors.endTime
+                                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                    : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                            }`}
+                                        />
+                                    </div>
+                                    {(formErrors.startTime || formErrors.endTime) && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.startTime || formErrors.endTime}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Process Description */}
-                            <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
-                                <label htmlFor="processDescription" className="block text-sm font-bold text-gray-900 mb-3">
-                                    Process Description
-                                </label>
-                                <textarea
-                                    id="processDescription"
-                                    name="processDescription"
-                                    value={formData.processDescription}
-                                    onChange={handleFormChange}
-                                    rows={4}
-                                    className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all font-semibold text-gray-900 resize-none bg-white hover:border-gray-300"
-                                    placeholder="Enter process description (optional)"
-                                />
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="temperature" className="block text-sm font-bold text-gray-900 mb-3">
+                                        Temperature (°C) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="temperature"
+                                        name="temperature"
+                                        value={formData.temperature}
+                                        onChange={handleFormChange}
+                                        className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                            formErrors.temperature
+                                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                        }`}
+                                        placeholder="Enter temperature"
+                                    />
+                                    {formErrors.temperature && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.temperature}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="outputWeight" className="block text-sm font-bold text-gray-900 mb-3">
+                                        Output Weight (kg) <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="outputWeight"
+                                        name="outputWeight"
+                                        value={formData.outputWeight}
+                                        onChange={handleFormChange}
+                                        className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                            formErrors.outputWeight
+                                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                        }`}
+                                        placeholder="Enter output weight"
+                                    />
+                                    {formErrors.outputWeight && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.outputWeight}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="ipfsHash" className="block text-sm font-bold text-gray-900 mb-3">
+                                        IPFS Hash <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="ipfsHash"
+                                        name="ipfsHash"
+                                        value={formData.ipfsHash}
+                                        onChange={handleFormChange}
+                                        className={`w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base ${
+                                            formErrors.ipfsHash
+                                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50'
+                                                : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300'
+                                        }`}
+                                        placeholder="Enter IPFS hash"
+                                    />
+                                    {formErrors.ipfsHash && (
+                                        <p className="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {formErrors.ipfsHash}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-5 border-2 border-gray-100">
+                                    <label htmlFor="remarks" className="block text-sm font-bold text-gray-900 mb-3">
+                                        Remarks (optional)
+                                    </label>
+                                    <textarea
+                                        id="remarks"
+                                        name="remarks"
+                                        value={formData.remarks}
+                                        onChange={handleFormChange}
+                                        rows={3}
+                                        className="w-full px-5 py-4 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all font-semibold text-gray-900 text-base border-gray-200 focus:border-teal-500 focus:ring-teal-100 bg-white hover:border-gray-300 resize-none"
+                                        placeholder="Add any notes"
+                                    />
+                                </div>
                             </div>
 
                             {/* Form Actions */}

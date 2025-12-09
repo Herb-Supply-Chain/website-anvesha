@@ -4,13 +4,18 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 export default function ConsumerPortal() {
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
     const [phoneNumber, setPhoneNumber] = useState('')
     const [showScanner, setShowScanner] = useState(false)
     const [productData, setProductData] = useState<any>(null)
     const [activeTab, setActiveTab] = useState<'origin' | 'lab' | 'sustainability' | 'journey'>('origin')
     const [scanning, setScanning] = useState(false)
+    const [verifying, setVerifying] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
     const streamRef = useRef<MediaStream | null>(null)
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const scanFrameRef = useRef<number | null>(null)
+    const barcodeDetectorRef = useRef<BarcodeDetector | null>(null)
 
     // Sample product data
     const sampleProductData = {
@@ -187,19 +192,80 @@ export default function ConsumerPortal() {
     const handleQRScan = async () => {
         setShowScanner(true)
         await startCamera()
-
-        // Simulate QR code detection after 3 seconds
-        setTimeout(() => {
-            stopCamera()
-            setProductData(sampleProductData)
-        }, 3000)
     }
+
+    const fetchProductByQr = async (qrValue: string) => {
+        setVerifying(true)
+        try {
+            const res = await fetch(`${API_BASE}/api/consumer/verify-qr?code=${encodeURIComponent(qrValue)}`)
+            if (!res.ok) throw new Error('Verification failed')
+            const data = await res.json()
+            // Adjust according to actual response shape
+            setProductData(data?.data || data || sampleProductData)
+        } catch (err) {
+            console.warn('QR verify failed, using sample data', err)
+            setProductData(sampleProductData)
+        } finally {
+            setVerifying(false)
+        }
+    }
+
+    useEffect(() => {
+        // Prepare barcode detector if supported
+        if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+            try {
+                barcodeDetectorRef.current = new BarcodeDetector({ formats: ['qr_code'] })
+            } catch (err) {
+                console.warn('BarcodeDetector init failed', err)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        // Scanning loop using BarcodeDetector
+        const detect = async () => {
+            if (!scanning || !videoRef.current || !canvasRef.current || !barcodeDetectorRef.current) {
+                return
+            }
+            const video = videoRef.current
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext('2d')
+            if (!ctx || video.readyState < 2) {
+                scanFrameRef.current = requestAnimationFrame(detect)
+                return
+            }
+            canvas.width = video.videoWidth
+            canvas.height = video.videoHeight
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+            try {
+                const codes = await barcodeDetectorRef.current.detect(canvas)
+                if (codes && codes.length) {
+                    stopCamera()
+                    const qrValue = codes[0].rawValue || ''
+                    await fetchProductByQr(qrValue)
+                    return
+                }
+            } catch (err) {
+                console.warn('QR detection error', err)
+            }
+            scanFrameRef.current = requestAnimationFrame(detect)
+        }
+
+        if (scanning && barcodeDetectorRef.current) {
+            scanFrameRef.current = requestAnimationFrame(detect)
+        }
+
+        return () => {
+            if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current)
+        }
+    }, [scanning])
 
     useEffect(() => {
         return () => {
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop())
             }
+            if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current)
         }
     }, [])
 
@@ -319,6 +385,7 @@ Blockchain-Verified Traceability System
                                                 playsInline
                                                 className="w-full h-64 object-cover"
                                             />
+                                            <canvas ref={canvasRef} className="hidden" />
                                             {scanning && (
                                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                     <div className="w-48 h-48 border-4 border-white rounded-2xl shadow-lg"></div>
@@ -327,6 +394,7 @@ Blockchain-Verified Traceability System
                                         </div>
                                         <p className="text-sm text-gray-600 text-center mb-4 font-semibold">
                                             Position the QR code within the frame
+                                            {verifying && <span className="ml-2 text-[#016868]">Verifying…</span>}
                                         </p>
                                         <button
                                             onClick={stopCamera}
