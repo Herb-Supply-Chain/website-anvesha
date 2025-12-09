@@ -10,6 +10,7 @@ interface GeneratedCode {
 }
 
 export default function ManufacturingPage() {
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://server-anvesha.onrender.com'
     const [batchId, setBatchId] = useState('')
     const [qrCount, setQrCount] = useState<number | ''>('')
     const [codes, setCodes] = useState<GeneratedCode[]>([])
@@ -30,12 +31,8 @@ export default function ManufacturingPage() {
             const newCodes: GeneratedCode[] = []
             for (let i = 0; i < Number(qrCount); i++) {
                 const id = `${batchId}-QR-${String(i + 1).padStart(4, '0')}`
-                const payload = {
-                    id,
-                    batchId,
-                    index: i + 1,
-                }
-                const dataUrl = await QRCode.toDataURL(JSON.stringify(payload), {
+                const verificationUrl = `${APP_URL}/consumer-portal?package=${encodeURIComponent(id)}`
+                const dataUrl = await QRCode.toDataURL(verificationUrl, {
                     width: 256,
                     margin: 1,
                     color: { dark: '#000000', light: '#FFFFFF' }

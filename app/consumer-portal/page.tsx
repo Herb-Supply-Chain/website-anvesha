@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export default function ConsumerPortal() {
+    const searchParams = useSearchParams()
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
     const [phoneNumber, setPhoneNumber] = useState('')
     const [showScanner, setShowScanner] = useState(false)
@@ -209,6 +211,14 @@ export default function ConsumerPortal() {
             setVerifying(false)
         }
     }
+
+    // Auto-verify when QR URL contains ?package=...
+    useEffect(() => {
+        const pkg = searchParams.get('package')
+        if (pkg) {
+            fetchProductByQr(pkg)
+        }
+    }, [searchParams])
 
     useEffect(() => {
         // Prepare barcode detector if supported

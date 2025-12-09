@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 export default function LabTestingPage() {
     const router = useRouter()
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
+    const API_BASE = "http://192.168.50.175:5000/api"
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [formData, setFormData] = useState({
         batchId: '',
