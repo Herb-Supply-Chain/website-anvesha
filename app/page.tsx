@@ -107,33 +107,33 @@ function LoginCard({ language, t }: LoginCardProps) {
                 <p className="text-xs sm:text-sm text-gray-500">{t[language].authorizedOnly}</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5 lg:space-y-6">
                 {error && (
-                    <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm text-center border border-red-200 animate-shake">
+                    <div className="bg-red-50 text-red-600 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm text-center border border-red-200 animate-shake">
                         {error}
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t[language].emailAddress}</label>
+                <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">{t[language].emailAddress}</label>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="your.email@ayush.gov.in"
-                        className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 lg:py-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
                         required
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t[language].password}</label>
+                <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">{t[language].password}</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter your password"
-                        className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 lg:py-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg sm:rounded-xl text-sm sm:text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 hover:border-gray-300"
                         required
                     />
                 </div>
@@ -141,11 +141,11 @@ function LoginCard({ language, t }: LoginCardProps) {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold py-3 sm:py-3.5 lg:py-4 rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base"
                 >
                     {isLoading ? (
                         <span className="flex items-center justify-center gap-2">
-                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -480,7 +480,7 @@ export default function LandingPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white font-inter">
             {/* Navigation */}
             <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-[#014848]'
                 } `}>
@@ -535,21 +535,21 @@ export default function LandingPage() {
                 </div>
             </nav>
             {/* Hero Section - New Design */}
-            <section className="relative min-h-screen bg-white pt-20 overflow-hidden">
+            <section className="relative min-h-screen bg-white pt-16 sm:pt-20 overflow-hidden">
                 {/* Background Decoration */}
                 <div className="absolute top-0 left-0 w-full lg:w-1/2 h-full opacity-10 pointer-events-none select-none z-0 flex items-center justify-center">
                     <img
                         src="/pixel-tree.png"
                         alt=""
-                        className="w-[60000px] h-[60000px] object-contain grayscale translate-x-[15px]"
+                        className="w-[80000px] sm:w-[100000px] lg:w-[120000px] h-[80000px] sm:h-[100000px] lg:h-[120000px] object-contain translate-x-[40px] sm:translate-x-[60px] lg:translate-x-[80px] translate-y-[20px] sm:translate-y-[30px] scale-100 sm:scale-125 lg:scale-150"
                         aria-hidden="true"
                     />
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16 xl:py-20 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
                         {/* Left Side - Branding */}
-                        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+                        <div className="space-y-3 sm:space-y-4 lg:space-y-6 xl:space-y-8">
 
 
                             {/* ANVESHA Title */}
@@ -592,25 +592,25 @@ export default function LandingPage() {
             </section>
 
             {/* Key Initiatives */}
-            < section className="py-20 px-6 bg-white" >
+            < section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
+                    <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                        <h3 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                             {t[language].keyInitiatives}
                         </h3>
-                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].keyInitiativesDesc}</p>
+                        <div className="h-1 w-16 sm:w-24 bg-teal-600 rounded-full mx-auto mb-4 sm:mb-6"></div>
+                        <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4">{t[language].keyInitiativesDesc}</p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                         {initiatives.map((initiative, index) => (
                             <div
                                 key={index}
-                                className="group bg-gradient-to-br from-white to-gray-50 p-8 rounded-2xl border-2 border-gray-200 hover:border-teal-500 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer"
+                                className="group bg-gradient-to-br from-white to-gray-50 p-6 sm:p-8 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:border-teal-500 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer"
                             >
-                                <div className="w-16 h-16 bg-teal-600 text-white rounded-full flex items-center justify-center mb-5 text-2xl font-bold group-hover:bg-teal-700 transition-colors duration-300">{initiative.icon}</div>
-                                <h4 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-teal-600 transition-colors font-playfair">{initiative.title}</h4>
-                                <p className="text-gray-600 leading-relaxed text-base">{initiative.description}</p>
-                                <div className="mt-4 text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-teal-600 text-white rounded-full flex items-center justify-center mb-4 sm:mb-5 text-xl sm:text-2xl font-bold group-hover:bg-teal-700 transition-colors duration-300">{initiative.icon}</div>
+                                <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 group-hover:text-teal-600 transition-colors font-playfair">{initiative.title}</h4>
+                                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{initiative.description}</p>
+                                <div className="mt-3 sm:mt-4 text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity text-sm sm:text-base">
                                     Learn more →
                                 </div>
                             </div>
@@ -620,21 +620,21 @@ export default function LandingPage() {
             </section >
 
             {/* Process Flow */}
-            < section className="py-24 px-6 bg-gradient-to-br from-teal-50/50 to-white relative overflow-hidden" >
+            < section className="py-12 sm:py-16 lg:py-20 xl:py-24 px-4 sm:px-6 bg-gradient-to-br from-teal-50/50 to-white relative overflow-hidden" >
                 {/* Background Pattern */}
                 < div className="absolute inset-0 opacity-5 pointer-events-none" >
-                    <div className="absolute top-0 left-0 w-64 h-64 bg-teal-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+                    <div className="absolute top-0 left-0 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-teal-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+                    <div className="absolute top-0 right-0 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
                 </div >
 
                 <div className="max-w-7xl mx-auto relative z-10">
-                    <div className="text-center mb-20">
-                        <span className="text-teal-600 font-semibold tracking-wider text-sm uppercase mb-3 block">{t[language].processFlowTag}</span>
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-6">
+                    <div className="text-center mb-8 sm:mb-12 lg:mb-16 xl:mb-20">
+                        <span className="text-teal-600 font-semibold tracking-wider text-xs sm:text-sm uppercase mb-2 sm:mb-3 block">{t[language].processFlowTag}</span>
+                        <h3 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
                             {t[language].processFlow}
                         </h3>
-                        <div className="h-1.5 w-24 bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mx-auto mb-8"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">
+                        <div className="h-1 sm:h-1.5 w-16 sm:w-24 bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mx-auto mb-4 sm:mb-6 lg:mb-8"></div>
+                        <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed px-4">
                             {t[language].processFlowDesc}
                         </p>
                     </div>
@@ -645,27 +645,27 @@ export default function LandingPage() {
                             <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-teal-500 via-teal-400 to-teal-500 w-full animate-shimmer bg-[length:200%_100%]"></div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 relative">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12 relative">
                             {processSteps.map((step, index) => (
                                 <div key={index} className="group relative flex flex-col items-center">
                                     {/* Step Number Badge */}
-                                    <div className="absolute -top-12 opacity-10 font-[1000] text-6xl text-teal-900 select-none group-hover:opacity-20 transition-opacity">
+                                    <div className="absolute -top-8 sm:-top-12 opacity-10 font-[1000] text-4xl sm:text-5xl lg:text-6xl text-teal-900 select-none group-hover:opacity-20 transition-opacity">
                                         {index + 1}
                                     </div>
 
                                     {/* Icon Container */}
-                                    <div className="w-24 h-24 bg-white rounded-full shadow-lg border-4 border-white flex items-center justify-center mb-6 relative z-10 group-hover:border-teal-500 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                                        <div className="text-teal-600 group-hover:text-teal-700 transition-colors">
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-white rounded-full shadow-lg border-4 border-white flex items-center justify-center mb-4 sm:mb-6 relative z-10 group-hover:border-teal-500 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                                        <div className="text-teal-600 group-hover:text-teal-700 transition-colors text-2xl sm:text-3xl lg:text-4xl">
                                             {step.icon}
                                         </div>
                                     </div>
 
                                     {/* Content */}
                                     <div className="text-center px-2">
-                                        <h4 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-teal-700 transition-colors font-playfair">
+                                        <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 group-hover:text-teal-700 transition-colors font-playfair">
                                             {step.title}
                                         </h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed group-hover:text-gray-700 transition-colors">
+                                        <p className="text-xs sm:text-sm text-gray-500 leading-relaxed group-hover:text-gray-700 transition-colors">
                                             {step.description}
                                         </p>
                                     </div>
@@ -677,23 +677,23 @@ export default function LandingPage() {
             </section >
 
             {/* Aligned with National Standards */}
-            < section className="py-20 px-6 bg-white" >
+            < section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">
+                    <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                        <h3 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
                             {t[language].nationalStandards}
                         </h3>
-                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].nationalStandardsDesc}</p>
+                        <div className="h-1 w-16 sm:w-24 bg-teal-600 rounded-full mx-auto mb-4 sm:mb-6"></div>
+                        <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4">{t[language].nationalStandardsDesc}</p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                         {standards.map((standard, index) => (
                             <div
                                 key={index}
-                                className="bg-gradient-to-br from-teal-50 to-blue-50 p-8 rounded-2xl text-center hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-teal-500"
+                                className="bg-gradient-to-br from-teal-50 to-blue-50 p-6 sm:p-8 rounded-xl sm:rounded-2xl text-center hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 border-2 border-transparent hover:border-teal-500"
                             >
-                                <div className="text-3xl font-bold text-teal-600 mb-3 font-playfair">{standard.name}</div>
-                                <div className="text-sm font-semibold text-gray-800 mb-2">{standard.full}</div>
+                                <div className="text-2xl sm:text-3xl font-bold text-teal-600 mb-2 sm:mb-3 font-playfair">{standard.name}</div>
+                                <div className="text-xs sm:text-sm font-semibold text-gray-800 mb-2">{standard.full}</div>
                                 <div className="text-xs text-gray-600 leading-relaxed">{standard.desc}</div>
                             </div>
                         ))}
@@ -702,41 +702,41 @@ export default function LandingPage() {
             </section >
 
             {/* Pilot Impact */}
-            < section className="py-20 px-6 bg-white" >
+            < section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 bg-white" >
                 <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h3 className="font-playfair text-5xl font-bold text-gray-900 mb-4">{t[language].pilotImpact}</h3>
-                        <div className="h-1 w-24 bg-teal-600 rounded-full mx-auto mb-6"></div>
-                        <p className="text-gray-600 text-xl max-w-3xl mx-auto">{t[language].pilotImpactDesc}</p>
+                    <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+                        <h3 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">{t[language].pilotImpact}</h3>
+                        <div className="h-1 w-16 sm:w-24 bg-teal-600 rounded-full mx-auto mb-4 sm:mb-6"></div>
+                        <p className="text-gray-600 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-4">{t[language].pilotImpactDesc}</p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
                         {stats.map((stat, index) => (
                             <div
                                 key={index}
-                                className="bg-white p-8 rounded-2xl text-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
+                                className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl text-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 border border-gray-100"
                             >
-                                <div className="text-5xl font-bold text-teal-600 mb-2">{stat.value}</div>
-                                <div className="text-gray-600 font-medium">{stat.label}</div>
+                                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-teal-600 mb-1 sm:mb-2">{stat.value}</div>
+                                <div className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium">{stat.label}</div>
                             </div>
                         ))}
                     </div>
 
                     {/* Testimonial */}
-                    <div className="bg-white rounded-3xl p-12 max-w-4xl mx-auto shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-                        <p className="text-lg text-center leading-relaxed mb-8 text-gray-700 italic">
+                    <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 max-w-4xl mx-auto shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+                        <p className="text-base sm:text-lg text-center leading-relaxed mb-6 sm:mb-8 text-gray-700 italic px-2">
                             {t[language].testimonial}
                         </p>
                         <div className="text-center">
-                            <div className="font-bold text-xl text-gray-900">{t[language].testimonialAuthor}</div>
+                            <div className="font-bold text-lg sm:text-xl text-gray-900">{t[language].testimonialAuthor}</div>
                         </div>
                     </div>
                 </div>
             </section >
 
             {/* Footer */}
-            < footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6" >
+            < footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-8 sm:py-10 lg:py-12 px-4 sm:px-6" >
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-4 gap-8 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
                         <div>
                             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-teal-700/50 mb-4">
                                 <span className="text-xl">🌿</span>
@@ -747,8 +747,8 @@ export default function LandingPage() {
                             </p>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">{t[language].quickLinks}</h4>
-                            <ul className="space-y-2 text-sm text-teal-200">
+                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].quickLinks}</h4>
+                            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-teal-200">
                                 <li><Link href="/" className="hover:text-white transition-colors">{t[language].home}</Link></li>
                                 <li><Link href="/about" className="hover:text-white transition-colors">{t[language].aboutUs}</Link></li>
                                 <li><Link href="/contact" className="hover:text-white transition-colors">{t[language].contact}</Link></li>
@@ -756,8 +756,8 @@ export default function LandingPage() {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">{t[language].portals}</h4>
-                            <ul className="space-y-2 text-sm text-teal-200">
+                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].portals}</h4>
+                            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-teal-200">
                                 <li><Link href="/processor" className="hover:text-white transition-colors">{t[language].processorLogin}</Link></li>
                                 <li><Link href="/lab" className="hover:text-white transition-colors">{t[language].labDashboard}</Link></li>
                                 <li><Link href="/manufacturer" className="hover:text-white transition-colors">{t[language].manufacturerPortal}</Link></li>
@@ -765,21 +765,21 @@ export default function LandingPage() {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-4 text-teal-50">{t[language].contact}</h4>
-                            <p className="text-teal-200 text-sm leading-relaxed">
+                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].contact}</h4>
+                            <p className="text-teal-200 text-xs sm:text-sm leading-relaxed">
                                 Ministry of AYUSH<br />
                                 AYUSH Bhawan, B Block<br />
                                 GPO Complex, INA<br />
                                 Mumbai - 400099
                             </p>
-                            <div className="mt-4 flex gap-4">
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-xl">𝕏</a>
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-xl">📘</a>
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-xl">📸</a>
+                            <div className="mt-3 sm:mt-4 flex gap-3 sm:gap-4">
+                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">𝕏</a>
+                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">📘</a>
+                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">📸</a>
                             </div>
                         </div>
                     </div>
-                    <div className="pt-8 border-t border-teal-800 text-center text-sm text-teal-400">
+                    <div className="pt-6 sm:pt-8 border-t border-teal-800 text-center text-xs sm:text-sm text-teal-400 px-4">
                         {t[language].copyright}
                         {t[language].byDevs}
                     </div>

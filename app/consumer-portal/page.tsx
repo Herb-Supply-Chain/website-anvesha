@@ -249,7 +249,7 @@ Blockchain-Verified Traceability System
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-['Inter',sans-serif]">
+        <div className="min-h-screen bg-gray-50 font-inter">
             {/* Header */}
             <header className="border-b border-gray-200 py-5 px-6 bg-[#016868] sticky top-0 z-50 shadow-md">
                 <div className="max-w-6xl mx-auto">

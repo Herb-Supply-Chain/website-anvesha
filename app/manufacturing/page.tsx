@@ -408,7 +408,7 @@ export default function ManufacturingPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gray-50 font-['Inter',sans-serif]">
+        <div className="min-h-screen bg-gray-50 font-inter">
             {/* Header */}
             <div className="bg-[#016868] text-white p-6 shadow-lg">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">

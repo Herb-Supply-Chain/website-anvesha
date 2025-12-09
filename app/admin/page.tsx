@@ -33,6 +33,19 @@ export default function AdminPage() {
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [userEmail, setUserEmail] = useState<string>('')
+    const [geoFencingData, setGeoFencingData] = useState({
+        minLatitude: '',
+        maxLatitude: '',
+        minLongitude: '',
+        maxLongitude: ''
+    })
+    const [geoFencingErrors, setGeoFencingErrors] = useState({
+        minLatitude: '',
+        maxLatitude: '',
+        minLongitude: '',
+        maxLongitude: ''
+    })
+    const [isSubmittingGeoFencing, setIsSubmittingGeoFencing] = useState(false)
 
     // Helper function to get token from cookies or localStorage
     const getToken = () => {
@@ -340,6 +353,15 @@ export default function AdminPage() {
             )
         },
         {
+            id: 'geo-fencing',
+            label: 'Geo Fencing',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            )
+        },
+        {
             id: 'settings',
             label: 'Settings',
             icon: (
@@ -352,7 +374,7 @@ export default function AdminPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-white flex">
+        <div className="min-h-screen bg-white flex font-inter">
             {/* Mobile Menu Overlay */}
             {sidebarOpen && (
                 <div 
@@ -1063,6 +1085,341 @@ export default function AdminPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Geo Fencing Section */}
+                    {activeSection === 'geo-fencing' && (
+                        <div className="space-y-6">
+                            <div className="bg-white border border-gray-200 rounded-lg p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-6">Geo Fencing Configuration</h3>
+                                <p className="text-sm text-gray-600 mb-6">
+                                    Define the geographical boundaries for your traceability system. Set minimum and maximum latitude and longitude values to create a geo-fenced area.
+                                </p>
+                                
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault()
+                                    
+                                    // Validate form
+                                    const errors = {
+                                        minLatitude: '',
+                                        maxLatitude: '',
+                                        minLongitude: '',
+                                        maxLongitude: ''
+                                    }
+                                    let isValid = true
+                                    
+                                    if (!geoFencingData.minLatitude.trim()) {
+                                        errors.minLatitude = 'Minimum latitude is required'
+                                        isValid = false
+                                    } else {
+                                        const minLat = parseFloat(geoFencingData.minLatitude)
+                                        if (isNaN(minLat) || minLat < -90 || minLat > 90) {
+                                            errors.minLatitude = 'Latitude must be between -90 and 90'
+                                            isValid = false
+                                        }
+                                    }
+                                    
+                                    if (!geoFencingData.maxLatitude.trim()) {
+                                        errors.maxLatitude = 'Maximum latitude is required'
+                                        isValid = false
+                                    } else {
+                                        const maxLat = parseFloat(geoFencingData.maxLatitude)
+                                        if (isNaN(maxLat) || maxLat < -90 || maxLat > 90) {
+                                            errors.maxLatitude = 'Latitude must be between -90 and 90'
+                                            isValid = false
+                                        }
+                                    }
+                                    
+                                    if (!geoFencingData.minLongitude.trim()) {
+                                        errors.minLongitude = 'Minimum longitude is required'
+                                        isValid = false
+                                    } else {
+                                        const minLng = parseFloat(geoFencingData.minLongitude)
+                                        if (isNaN(minLng) || minLng < -180 || minLng > 180) {
+                                            errors.minLongitude = 'Longitude must be between -180 and 180'
+                                            isValid = false
+                                        }
+                                    }
+                                    
+                                    if (!geoFencingData.maxLongitude.trim()) {
+                                        errors.maxLongitude = 'Maximum longitude is required'
+                                        isValid = false
+                                    } else {
+                                        const maxLng = parseFloat(geoFencingData.maxLongitude)
+                                        if (isNaN(maxLng) || maxLng < -180 || maxLng > 180) {
+                                            errors.maxLongitude = 'Longitude must be between -180 and 180'
+                                            isValid = false
+                                        }
+                                    }
+                                    
+                                    // Validate min < max
+                                    if (isValid) {
+                                        const minLat = parseFloat(geoFencingData.minLatitude)
+                                        const maxLat = parseFloat(geoFencingData.maxLatitude)
+                                        const minLng = parseFloat(geoFencingData.minLongitude)
+                                        const maxLng = parseFloat(geoFencingData.maxLongitude)
+                                        
+                                        if (minLat >= maxLat) {
+                                            errors.minLatitude = 'Minimum latitude must be less than maximum latitude'
+                                            errors.maxLatitude = 'Maximum latitude must be greater than minimum latitude'
+                                            isValid = false
+                                        }
+                                        
+                                        if (minLng >= maxLng) {
+                                            errors.minLongitude = 'Minimum longitude must be less than maximum longitude'
+                                            errors.maxLongitude = 'Maximum longitude must be greater than minimum longitude'
+                                            isValid = false
+                                        }
+                                    }
+                                    
+                                    setGeoFencingErrors(errors)
+                                    
+                                    if (!isValid) {
+                                        return
+                                    }
+                                    
+                                    setIsSubmittingGeoFencing(true)
+                                    
+                                    try {
+                                        const token = getToken()
+                                        const headers: HeadersInit = {
+                                            'Content-Type': 'application/json',
+                                        }
+                                        
+                                        if (token) {
+                                            headers['Authorization'] = `Bearer ${token}`
+                                        }
+                                        
+                                        // TODO: Replace with actual API endpoint
+                                        const response = await fetch('http://192.168.50.154:3000/api/geo-fencing', {
+                                            method: 'POST',
+                                            headers,
+                                            body: JSON.stringify({
+                                                minLatitude: parseFloat(geoFencingData.minLatitude),
+                                                maxLatitude: parseFloat(geoFencingData.maxLatitude),
+                                                minLongitude: parseFloat(geoFencingData.minLongitude),
+                                                maxLongitude: parseFloat(geoFencingData.maxLongitude)
+                                            }),
+                                        })
+                                        
+                                        const data = await response.json()
+                                        
+                                        if (response.ok && data.success) {
+                                            alert('✅ Geo fencing configuration saved successfully!')
+                                            // Optionally reset form or keep values
+                                        } else {
+                                            alert(data?.message || 'Failed to save geo fencing configuration')
+                                        }
+                                    } catch (error) {
+                                        console.error('Error saving geo fencing:', error)
+                                        alert('Unable to connect to server. Please try again.')
+                                    } finally {
+                                        setIsSubmittingGeoFencing(false)
+                                    }
+                                }} className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        {/* Minimum Latitude */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                Minimum Latitude <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={geoFencingData.minLatitude}
+                                                onChange={(e) => {
+                                                    setGeoFencingData(prev => ({ ...prev, minLatitude: e.target.value }))
+                                                    if (geoFencingErrors.minLatitude) {
+                                                        setGeoFencingErrors(prev => ({ ...prev, minLatitude: '' }))
+                                                    }
+                                                }}
+                                                placeholder="e.g., 19.0760"
+                                                className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                                    geoFencingErrors.minLatitude
+                                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                                        : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 hover:border-gray-300'
+                                                }`}
+                                                required
+                                            />
+                                            {geoFencingErrors.minLatitude && (
+                                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {geoFencingErrors.minLatitude}
+                                                </p>
+                                            )}
+                                            <p className="mt-1 text-xs text-gray-500">Range: -90 to 90</p>
+                                        </div>
+                                        
+                                        {/* Maximum Latitude */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                Maximum Latitude <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={geoFencingData.maxLatitude}
+                                                onChange={(e) => {
+                                                    setGeoFencingData(prev => ({ ...prev, maxLatitude: e.target.value }))
+                                                    if (geoFencingErrors.maxLatitude) {
+                                                        setGeoFencingErrors(prev => ({ ...prev, maxLatitude: '' }))
+                                                    }
+                                                }}
+                                                placeholder="e.g., 19.2760"
+                                                className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                                    geoFencingErrors.maxLatitude
+                                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                                        : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 hover:border-gray-300'
+                                                }`}
+                                                required
+                                            />
+                                            {geoFencingErrors.maxLatitude && (
+                                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {geoFencingErrors.maxLatitude}
+                                                </p>
+                                            )}
+                                            <p className="mt-1 text-xs text-gray-500">Range: -90 to 90</p>
+                                        </div>
+                                        
+                                        {/* Minimum Longitude */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                Minimum Longitude <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={geoFencingData.minLongitude}
+                                                onChange={(e) => {
+                                                    setGeoFencingData(prev => ({ ...prev, minLongitude: e.target.value }))
+                                                    if (geoFencingErrors.minLongitude) {
+                                                        setGeoFencingErrors(prev => ({ ...prev, minLongitude: '' }))
+                                                    }
+                                                }}
+                                                placeholder="e.g., 72.8777"
+                                                className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                                    geoFencingErrors.minLongitude
+                                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                                        : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 hover:border-gray-300'
+                                                }`}
+                                                required
+                                            />
+                                            {geoFencingErrors.minLongitude && (
+                                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {geoFencingErrors.minLongitude}
+                                                </p>
+                                            )}
+                                            <p className="mt-1 text-xs text-gray-500">Range: -180 to 180</p>
+                                        </div>
+                                        
+                                        {/* Maximum Longitude */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                Maximum Longitude <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                value={geoFencingData.maxLongitude}
+                                                onChange={(e) => {
+                                                    setGeoFencingData(prev => ({ ...prev, maxLongitude: e.target.value }))
+                                                    if (geoFencingErrors.maxLongitude) {
+                                                        setGeoFencingErrors(prev => ({ ...prev, maxLongitude: '' }))
+                                                    }
+                                                }}
+                                                placeholder="e.g., 73.0777"
+                                                className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                                    geoFencingErrors.maxLongitude
+                                                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                                        : 'border-gray-200 focus:border-teal-500 focus:ring-teal-100 hover:border-gray-300'
+                                                }`}
+                                                required
+                                            />
+                                            {geoFencingErrors.maxLongitude && (
+                                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {geoFencingErrors.maxLongitude}
+                                                </p>
+                                            )}
+                                            <p className="mt-1 text-xs text-gray-500">Range: -180 to 180</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Info Box */}
+                                    <div className="bg-teal-50 border-2 border-teal-200 rounded-lg p-4">
+                                        <div className="flex items-start gap-3">
+                                            <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <h4 className="font-semibold text-teal-900 mb-1">About Geo Fencing</h4>
+                                                <p className="text-sm text-teal-800">
+                                                    Geo fencing allows you to define geographical boundaries for your traceability system. 
+                                                    All location-based operations will be validated against these boundaries to ensure data integrity 
+                                                    and compliance with regional regulations.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Submit Button */}
+                                    <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setGeoFencingData({
+                                                    minLatitude: '',
+                                                    maxLatitude: '',
+                                                    minLongitude: '',
+                                                    maxLongitude: ''
+                                                })
+                                                setGeoFencingErrors({
+                                                    minLatitude: '',
+                                                    maxLatitude: '',
+                                                    minLongitude: '',
+                                                    maxLongitude: ''
+                                                })
+                                            }}
+                                            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-lg transition-colors"
+                                        >
+                                            Reset
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmittingGeoFencing}
+                                            className="px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            {isSubmittingGeoFencing ? (
+                                                <>
+                                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span>Saving...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <span>Save Configuration</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     )}

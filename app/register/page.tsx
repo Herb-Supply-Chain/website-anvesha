@@ -112,20 +112,23 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-white font-inter">
       {/* Navigation */}
       <nav className="bg-[#014848] text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-xl p-1 shadow-md">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-md">
                 <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
               </div>
-              <div>
-                <h1 className="text-sm font-bold">Government of India | भारत सरकार</h1>
-                <p className="text-xs font-medium">Ministry of AYUSH | आयुष मंत्रालय</p>
-                <p className="text-xs font-medium">ANVESHA | अन्वेषा</p>
+              <div className="hidden sm:block">
+                <h1 className="text-xs sm:text-sm font-bold">Government of India | भारत सरकार</h1>
+                <p className="text-[10px] sm:text-xs font-medium">Ministry of AYUSH | आयुष मंत्रालय</p>
+                <p className="text-[10px] sm:text-xs font-medium">ANVESHA | अन्वेषा</p>
+              </div>
+              <div className="sm:hidden">
+                <h1 className="text-xs font-bold">ANVESHA</h1>
               </div>
             </div>
-            <Link href="/" className="text-white/90 hover:text-white text-sm font-medium transition-colors">
-              ← Back to Home
+            <Link href="/" className="text-white/90 hover:text-white text-xs sm:text-sm font-medium transition-colors whitespace-nowrap">
+              ← Back
             </Link>
           </div>
         </div>
@@ -149,8 +152,8 @@ export default function RegisterPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 sm:p-6 md:p-8 lg:p-10">
-          <form onSubmit={handleRegister} className="space-y-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 p-4 sm:p-6 md:p-8 lg:p-10">
+          <form onSubmit={handleRegister} className="space-y-4 sm:space-y-5 lg:space-y-6">
             {error && (
               <div className="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-lg text-sm font-medium flex items-center gap-3">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +163,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
               {/* Role Selection */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -170,7 +173,7 @@ export default function RegisterPage() {
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
-                  className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all hover:border-gray-300"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 lg:py-3.5 bg-gray-50 border-2 border-gray-200 rounded-lg text-sm sm:text-base text-gray-900 font-medium focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all hover:border-gray-300"
                 >
                   <option value="" className="text-gray-500">Choose your role...</option>
                   {roles.map((r) => (
