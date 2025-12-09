@@ -439,9 +439,9 @@ export default function ProcessorPage() {
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
                     <div className="flex items-center justify-between gap-2 sm:gap-4">
                         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-lg">
+                            <Link href="/" aria-label="Go to home" className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-lg block">
                                 <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
-                            </div>
+                            </Link>
                             <div className="hidden sm:block">
                                 <h1 className="text-xs sm:text-sm lg:text-base font-bold">Government of India | भारत सरकार</h1>
                                 <p className="text-[10px] sm:text-xs font-medium text-teal-100">Ministry of AYUSH | आयुष मंत्रालय</p>

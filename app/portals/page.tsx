@@ -55,7 +55,7 @@ export default function PortalsPage() {
                         <div className="flex items-center gap-3">
                             <Link href="/" className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                                    <span className="text-2xl">🌿</span>
+                                    <span className="text-lg font-semibold text-teal-700">AN</span>
                                 </div>
                                 <div className="text-white">
                                     <h1 className="text-sm font-bold">Government of India</h1>

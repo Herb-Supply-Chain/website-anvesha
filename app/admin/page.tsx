@@ -57,7 +57,7 @@ export default function AdminPage() {
     const [isSubmittingGeoFencing, setIsSubmittingGeoFencing] = useState(false)
     const [geoFencingSuccess, setGeoFencingSuccess] = useState(false)
     const [geoFencingError, setGeoFencingError] = useState('')
-    const [showMap, setShowMap] = useState(false)
+    const [showMap, setShowMap] = useState(true)
     const [mapsApiLoaded, setMapsApiLoaded] = useState(false)
     const [mapLoading, setMapLoading] = useState(false)
     const [mapUpdateTrigger, setMapUpdateTrigger] = useState(0)
@@ -165,38 +165,28 @@ export default function AdminPage() {
 
     // Update map dynamically when coordinates change (with debounce)
     useEffect(() => {
-        if (!showMap || !mapRef.current || !mapsApiLoaded) return
+        if (!mapRef.current || !mapsApiLoaded) return
         
         const google = (window as any).google
         if (!google || !google.maps) return
         
-        // Check if all coordinates are provided and valid
-        if (!geoFencingData.minLatitude || !geoFencingData.maxLatitude || !geoFencingData.minLongitude || !geoFencingData.maxLongitude) {
-            return
-        }
-        
-        const minLat = parseFloat(geoFencingData.minLatitude)
-        const maxLat = parseFloat(geoFencingData.maxLatitude)
-        const minLng = parseFloat(geoFencingData.minLongitude)
-        const maxLng = parseFloat(geoFencingData.maxLongitude)
-        
-        // Validate coordinates
-        if (isNaN(minLat) || isNaN(maxLat) || isNaN(minLng) || isNaN(maxLng)) return
-        if (minLat >= maxLat || minLng >= maxLng) return
-        if (minLat < -90 || maxLat > 90 || minLng < -180 || maxLng > 180) return
-        
-        // Auto-show map when valid coordinates are entered
-        if (!showMap) {
-            setShowMap(true)
-        }
+        const hasAllCoords = geoFencingData.minLatitude && geoFencingData.maxLatitude && geoFencingData.minLongitude && geoFencingData.maxLongitude
+        const minLat = hasAllCoords ? parseFloat(geoFencingData.minLatitude) : null
+        const maxLat = hasAllCoords ? parseFloat(geoFencingData.maxLatitude) : null
+        const minLng = hasAllCoords ? parseFloat(geoFencingData.minLongitude) : null
+        const maxLng = hasAllCoords ? parseFloat(geoFencingData.maxLongitude) : null
+        const coordsValid = hasAllCoords &&
+            !isNaN(minLat!) && !isNaN(maxLat!) && !isNaN(minLng!) && !isNaN(maxLng!) &&
+            minLat! < maxLat! && minLng! < maxLng! &&
+            minLat! >= -90 && maxLat! <= 90 && minLng! >= -180 && maxLng! <= 180
         
         // Debounce map updates to avoid too many re-renders
         const timeoutId = setTimeout(() => {
             setMapLoading(true)
             
             try {
-                const centerLat = (minLat + maxLat) / 2
-                const centerLng = (minLng + maxLng) / 2
+                const centerLat = coordsValid ? (minLat! + maxLat!) / 2 : 20.5937 // India centroid fallback
+                const centerLng = coordsValid ? (minLng! + maxLng!) / 2 : 78.9629
                 
                 // Initialize or update map
                 if (!mapInstanceRef.current) {
@@ -205,15 +195,22 @@ export default function AdminPage() {
                         zoom: 8,
                         mapTypeId: google.maps.MapTypeId.ROADMAP,
                         styles: [
-                            {
-                                featureType: 'poi',
-                                elementType: 'labels',
-                                stylers: [{ visibility: 'off' }]
-                            }
+                            { elementType: 'geometry', stylers: [{ color: '#f1f5f9' }] },
+                            { elementType: 'labels.text.fill', stylers: [{ color: '#334155' }] },
+                            { elementType: 'labels.text.stroke', stylers: [{ color: '#f8fafc' }] },
+                            { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+                            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                            { featureType: 'road', stylers: [{ color: '#cbd5e1' }] },
+                            { featureType: 'road.arterial', stylers: [{ color: '#cbd5e1' }] },
+                            { featureType: 'road.highway', stylers: [{ color: '#94a3b8' }] },
+                            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+                            { featureType: 'water', stylers: [{ color: '#e0f2fe' }] }
                         ],
                         zoomControl: true,
                         streetViewControl: false,
-                        fullscreenControl: true
+                        fullscreenControl: true,
+                        gestureHandling: 'greedy', // allow direct scroll zoom without Ctrl
+                        scrollwheel: true
                     })
                 } else {
                     // Update map center if it already exists
@@ -225,32 +222,35 @@ export default function AdminPage() {
                     rectangleRef.current.setMap(null)
                     rectangleRef.current = null
                 }
-                
-                // Create rectangle for geo-fenced area
-                rectangleRef.current = new google.maps.Rectangle({
-                    bounds: {
-                        north: maxLat,
-                        south: minLat,
-                        east: maxLng,
-                        west: minLng
-                    },
-                    editable: false,
-                    draggable: false,
-                    fillColor: '#14b8a6',
-                    fillOpacity: 0.25,
-                    strokeColor: '#0d9488',
-                    strokeOpacity: 1,
-                    strokeWeight: 3
-                })
-                
-                rectangleRef.current.setMap(mapInstanceRef.current)
-                
-                // Fit map to bounds with padding
-                const bounds = new google.maps.LatLngBounds(
-                    new google.maps.LatLng(minLat, minLng),
-                    new google.maps.LatLng(maxLat, maxLng)
-                )
-                mapInstanceRef.current.fitBounds(bounds, { padding: 50 })
+
+                if (coordsValid) {
+                    // Create rectangle for geo-fenced area
+                    rectangleRef.current = new google.maps.Rectangle({
+                        bounds: {
+                            north: maxLat!,
+                            south: minLat!,
+                            east: maxLng!,
+                            west: minLng!
+                        },
+                        editable: false,
+                        draggable: false,
+                        fillColor: '#0f766e',
+                        fillOpacity: 0.2,
+                        strokeColor: '#0ea5e9',
+                        strokeOpacity: 0.9,
+                        strokeWeight: 3,
+                        strokePosition: google.maps.StrokePosition.CENTER
+                    })
+                    
+                    rectangleRef.current.setMap(mapInstanceRef.current)
+                    
+                    // Fit map to bounds with padding
+                    const bounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(minLat!, minLng!),
+                        new google.maps.LatLng(maxLat!, maxLng!)
+                    )
+                    mapInstanceRef.current.fitBounds(bounds, { padding: 50 })
+                }
                 
                 // Use setTimeout to ensure map renders before hiding loading
                 setTimeout(() => {
@@ -563,7 +563,9 @@ export default function AdminPage() {
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-lg p-1.5 flex items-center justify-center">
-                            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                            <Link href="/" aria-label="Go to home" className="block w-full h-full">
+                                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                            </Link>
                         </div>
                         <div>
                             <h1 className="font-bold text-lg">ANVESHA</h1>

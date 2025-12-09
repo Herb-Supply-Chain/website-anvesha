@@ -263,7 +263,7 @@ export default function LandingPage() {
             manufacturerPortal: 'Manufacturer Portal',
             adminConsole: 'Admin Console',
             copyright: '© 2024 Ministry of AYUSH, Government of India. All rights reserved.',
-            byDevs: '🪶 By CrackedDevs.'
+            byDevs: 'By CrackedDevs.'
         },
         hi: {
             // Navigation
@@ -360,7 +360,7 @@ export default function LandingPage() {
             manufacturerPortal: 'निर्माता पोर्टल',
             adminConsole: 'एडमिन कंसोल',
             copyright: '© 2024 आयुष मंत्रालय, भारत सरकार। सर्वाधिकार सुरक्षित।',
-            byDevs: '🪶 CrackedDevs द्वारा।'
+            byDevs: 'CrackedDevs द्वारा।'
         }
     }
 
@@ -487,9 +487,11 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-md">
-                                <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
-                            </div>
+                            <Link href="/" aria-label="Go to home" className="block">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white rounded-lg p-1 shadow-md hover:shadow-lg transition-all">
+                                    <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
+                                </div>
+                            </Link>
                             <div className="hidden sm:block">
                                 <h1 className={`text-xs sm:text-sm font-bold transition-colors ${scrolled ? 'text-gray-800' : 'text-white'
                                     } `}>
@@ -739,7 +741,6 @@ export default function LandingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
                         <div>
                             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-teal-700/50 mb-4">
-                                <span className="text-xl">🌿</span>
                                 <span className="font-bold text-lg">ANVESHA</span>
                             </div>
                             <p className="text-teal-100 text-sm leading-relaxed">
@@ -772,10 +773,10 @@ export default function LandingPage() {
                                 GPO Complex, INA<br />
                                 Mumbai - 400099
                             </p>
-                            <div className="mt-3 sm:mt-4 flex gap-3 sm:gap-4">
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">𝕏</a>
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">📘</a>
-                                <a href="#" className="text-teal-200 hover:text-white transition-colors text-lg sm:text-xl">📸</a>
+                            <div className="mt-3 sm:mt-4 flex gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-teal-200">
+                                <a href="#" className="hover:text-white transition-colors">X</a>
+                                <a href="#" className="hover:text-white transition-colors">Facebook</a>
+                                <a href="#" className="hover:text-white transition-colors">Instagram</a>
                             </div>
                         </div>
                     </div>

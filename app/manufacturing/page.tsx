@@ -1,989 +1,187 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { useState } from 'react'
 import QRCode from 'qrcode'
 import Link from 'next/link'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
-
-interface LabBatch {
+interface GeneratedCode {
     id: string
-    batchId: string
-    herb: string
-    weight: number
-    farmId: string
-    labResults: {
-        approved: boolean
-        purity: number
-        moisture: number
-        qualityGrade: string
-    }
-    labTestDate: string
-    labName: string
-    certificateId: string
-}
-
-interface PackageConfig {
-    size: number
-    quantity: number
-    unit: string
-}
-
-interface FinalPackage {
-    id: string
-    weight: number
-    qrCode: string
-    packageNumber: number
+    dataUrl: string
 }
 
 export default function ManufacturingPage() {
-    const router = useRouter()
-    const [currentStep, setCurrentStep] = useState(1)
-    const [selectedBatch, setSelectedBatch] = useState<LabBatch | null>(null)
-    const [availableBatches, setAvailableBatches] = useState<LabBatch[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [verificationData, setVerificationData] = useState<any>(null)
+    const [batchId, setBatchId] = useState('')
+    const [qrCount, setQrCount] = useState<number | ''>('')
+    const [codes, setCodes] = useState<GeneratedCode[]>([])
+    const [isGenerating, setIsGenerating] = useState(false)
 
-    // Step 2: Packaging Configuration
-    const [packageConfigs, setPackageConfigs] = useState<PackageConfig[]>([
-        { size: 100, quantity: 0, unit: 'g' },
-        { size: 250, quantity: 0, unit: 'g' },
-        { size: 500, quantity: 0, unit: 'g' },
-        { size: 1, quantity: 0, unit: 'kg' }
-    ])
-    const [customPackageSize, setCustomPackageSize] = useState('')
-    const [customPackageUnit, setCustomPackageUnit] = useState('g')
-
-    // Step 3: QR Code Generation
-    const [finalPackages, setFinalPackages] = useState<FinalPackage[]>([])
-    const [blockchainTxHash, setBlockchainTxHash] = useState('')
-    const [qrGenerationProgress, setQrGenerationProgress] = useState(0)
-
-    // Step 4: Product Info
-    const [productInfo, setProductInfo] = useState({
-        productName: '',
-        description: '',
-        benefits: '',
-        usage: '',
-        manufacturerName: '',
-        manufacturerLicense: '',
-        expiryMonths: '24'
-    })
-
-    // Step 5: Dispatch
-    const [dispatchDate, setDispatchDate] = useState(new Date().toISOString().split('T')[0])
-    const [dispatchNotes, setDispatchNotes] = useState('')
-
-    useEffect(() => {
-        loadAvailableBatches()
-    }, [])
-
-    const loadAvailableBatches = async () => {
-        setIsLoading(true)
-        try {
-            // Mock data for demonstration
-            const mockBatches: LabBatch[] = [
-                {
-                    id: 'LAB-BATCH-001',
-                    batchId: 'FARM-2024-ASH-001',
-                    herb: 'Ashwagandha',
-                    weight: 50,
-                    farmId: 'FARM-UK-001',
-                    labResults: {
-                        approved: true,
-                        purity: 98.5,
-                        moisture: 8.2,
-                        qualityGrade: 'A+'
-                    },
-                    labTestDate: '2024-12-01',
-                    labName: 'NABL Certified Quality Lab',
-                    certificateId: 'CERT-2024-ASH-001'
-                },
-                {
-                    id: 'LAB-BATCH-002',
-                    batchId: 'FARM-2024-TUL-001',
-                    herb: 'Tulsi',
-                    weight: 25,
-                    farmId: 'FARM-HP-002',
-                    labResults: {
-                        approved: true,
-                        purity: 96.8,
-                        moisture: 9.1,
-                        qualityGrade: 'A'
-                    },
-                    labTestDate: '2024-12-02',
-                    labName: 'AYUSH Quality Testing Center',
-                    certificateId: 'CERT-2024-TUL-002'
-                }
-            ]
-            setAvailableBatches(mockBatches)
-        } catch (error) {
-            console.error('Error loading batches:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    // Step 1: Verify Batch
-    const handleVerifyBatch = async () => {
-        if (!selectedBatch) return
-
-        setIsLoading(true)
-        try {
-            // API Call: POST /api/manufacturer/verify
-            // Mock response for demonstration
-            const mockVerification = {
-                verified: true,
-                supplyChainHistory: [
-                    {
-                        stage: 'Farm',
-                        date: '2024-11-20',
-                        location: selectedBatch.farmId,
-                        details: `${selectedBatch.weight}kg of ${selectedBatch.herb} harvested`
-                    },
-                    {
-                        stage: 'Lab Testing',
-                        date: selectedBatch.labTestDate,
-                        location: selectedBatch.labName,
-                        details: `Purity: ${selectedBatch.labResults.purity}%, Grade: ${selectedBatch.labResults.qualityGrade}`
-                    }
-                ]
-            }
-
-            setVerificationData(mockVerification)
-            setProductInfo(prev => ({
-                ...prev,
-                productName: `${selectedBatch.herb} Extract Premium`,
-                description: `Premium quality ${selectedBatch.herb} sourced from certified organic farms`
-            }))
-            setCurrentStep(2)
-        } catch (error) {
-            console.error('Verification error:', error)
-            alert('Failed to verify batch')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    // Step 2: Calculate Packages
-    const calculateTotalPackages = () => {
-        if (!selectedBatch) return 0
-        const totalWeightInGrams = selectedBatch.weight * 1000
-        let totalPackages = 0
-
-        packageConfigs.forEach(config => {
-            const sizeInGrams = config.unit === 'kg' ? config.size * 1000 : config.size
-            totalPackages += config.quantity
-        })
-
-        return totalPackages
-    }
-
-    const calculateUsedWeight = () => {
-        let usedWeight = 0
-        packageConfigs.forEach(config => {
-            const sizeInGrams = config.unit === 'kg' ? config.size * 1000 : config.size
-            usedWeight += (sizeInGrams * config.quantity) / 1000
-        })
-        return usedWeight
-    }
-
-    const addCustomPackage = () => {
-        if (!customPackageSize) return
-        const size = parseFloat(customPackageSize)
-        if (size > 0) {
-            setPackageConfigs([...packageConfigs, { size, quantity: 0, unit: customPackageUnit }])
-            setCustomPackageSize('')
-        }
-    }
-
-    const updatePackageQuantity = (index: number, quantity: number) => {
-        const updated = [...packageConfigs]
-        updated[index].quantity = Math.max(0, quantity)
-        setPackageConfigs(updated)
-    }
-
-    const proceedToQRGeneration = () => {
-        const totalPackages = calculateTotalPackages()
-        if (totalPackages === 0) {
-            alert('Please configure at least one package')
+    const handleGenerate = async () => {
+        if (!batchId.trim()) {
+            alert('Batch ID is required')
             return
         }
-        setCurrentStep(3)
-    }
+        if (!qrCount || qrCount <= 0 || qrCount > 2000) {
+            alert('Enter a valid QR count (1-2000)')
+            return
+        }
 
-    // Step 3: Generate QR Codes
-    const generateFinalQRCodes = async () => {
-        if (!selectedBatch) return
-
-        setIsLoading(true)
-        setQrGenerationProgress(0)
-
+        setIsGenerating(true)
         try {
-            const packages: FinalPackage[] = []
-            let packageNumber = 1
-
-            for (const config of packageConfigs) {
-                for (let i = 0; i < config.quantity; i++) {
-                    const packageId = `${selectedBatch.batchId}-PKG-${packageNumber.toString().padStart(4, '0')}`
-                    const qrData = JSON.stringify({
-                        packageId,
-                        batchId: selectedBatch.batchId,
-                        herb: selectedBatch.herb,
-                        weight: `${config.size}${config.unit}`,
-                        farmId: selectedBatch.farmId,
-                        labApproved: selectedBatch.labResults.approved,
-                        purity: selectedBatch.labResults.purity,
-                        verificationUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/consumer-portal?package=${packageId}`
-                    })
-
-                    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-                        width: 200,
-                        margin: 2,
-                        color: { dark: '#016868', light: '#FFFFFF' }
-                    })
-
-                    packages.push({
-                        id: packageId,
-                        weight: config.unit === 'kg' ? config.size * 1000 : config.size,
-                        qrCode: qrCodeDataUrl,
-                        packageNumber
-                    })
-
-                    packageNumber++
-                    setQrGenerationProgress(Math.round((packageNumber / calculateTotalPackages()) * 100))
+            const newCodes: GeneratedCode[] = []
+            for (let i = 0; i < Number(qrCount); i++) {
+                const id = `${batchId}-QR-${String(i + 1).padStart(4, '0')}`
+                const payload = {
+                    id,
+                    batchId,
+                    index: i + 1,
                 }
+                const dataUrl = await QRCode.toDataURL(JSON.stringify(payload), {
+                    width: 256,
+                    margin: 1,
+                    color: { dark: '#000000', light: '#FFFFFF' }
+                })
+                newCodes.push({ id, dataUrl })
             }
-
-            // Mock blockchain transaction hash
-            const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`
-            setBlockchainTxHash(mockTxHash)
-            setFinalPackages(packages)
-
-            setTimeout(() => setCurrentStep(4), 500)
-        } catch (error) {
-            console.error('QR generation error:', error)
+            setCodes(newCodes)
+        } catch (err) {
+            console.error('QR generation failed', err)
             alert('Failed to generate QR codes')
         } finally {
-            setIsLoading(false)
+            setIsGenerating(false)
         }
     }
 
-    // Step 5: Print & Dispatch
-    const handlePrintLabels = () => {
+    const handlePrint = () => {
+        if (!codes.length) return
         const printWindow = window.open('', '_blank')
         if (!printWindow) return
 
-        const labelsHTML = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    @media print {
-                        .page-break { page-break-after: always; }
-                    }
-                    body { font-family: 'Inter', Arial, sans-serif; }
-                    .label {
-                        width: 10cm;
-                        height: 7cm;
-                        border: 2px solid #016868;
-                        padding: 15px;
-                        margin: 10px;
-                        display: inline-block;
-                        page-break-inside: avoid;
-                    }
-                    .header { text-align: center; color: #016868; font-weight: bold; font-size: 18px; margin-bottom: 10px; }
-                    .qr-code { text-align: center; margin: 10px 0; }
-                    .info { font-size: 11px; line-height: 1.4; }
-                    .info strong { color: #016868; }
-                </style>
-            </head>
-            <body>
-                ${finalPackages.map(pkg => `
-                    <div class="label">
-                        <div class="header">ANVESHA</div>
-                        <div class="info">
-                            <strong>Product:</strong> ${productInfo.productName}<br>
-                            <strong>Herb:</strong> ${selectedBatch?.herb}<br>
-                            <strong>Weight:</strong> ${pkg.weight < 1000 ? pkg.weight + 'g' : (pkg.weight / 1000) + 'kg'}<br>
-                            <strong>Package:</strong> ${pkg.id}<br>
-                            <strong>Purity:</strong> ${selectedBatch?.labResults.purity}%
-                        </div>
-                        <div class="qr-code">
-                            <img src="${pkg.qrCode}" width="120" />
-                            <div style="font-size: 9px; margin-top: 5px;">Scan for traceability</div>
-                        </div>
+        const html = `
+        <!doctype html>
+        <html>
+        <head>
+            <style>
+                * { font-family: 'Inter', Arial, sans-serif; color: #000; }
+                .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+                .card { border: 1px solid #000; padding: 12px; text-align: center; page-break-inside: avoid; }
+                .title { font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+                .id { font-size: 12px; margin-top: 6px; word-break: break-all; }
+                @media print { body { margin: 12px; } }
+            </style>
+        </head>
+        <body>
+            <h2>Batch: ${batchId}</h2>
+            <div class="grid">
+                ${codes.map(c => `
+                    <div class="card">
+                        <div class="title">ANVESHA</div>
+                        <img src="${c.dataUrl}" width="180" height="180" />
+                        <div class="id">${c.id}</div>
                     </div>
                 `).join('')}
-            </body>
-            </html>
+            </div>
+        </body>
+        </html>
         `
 
-        printWindow.document.write(labelsHTML)
+        printWindow.document.write(html)
         printWindow.document.close()
+        printWindow.focus()
         printWindow.print()
     }
 
-    const handleDispatch = async () => {
-        if (!productInfo.manufacturerName) {
-            alert('Please fill in manufacturer details')
-            return
-        }
-
-        setIsLoading(true)
-        try {
-            // API Call: POST /api/manufacturer/dispatch
-            // Mock implementation
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            alert(`Successfully dispatched ${finalPackages.length} packages!\n\nInventory updated and packages marked as dispatched.`)
-
-            // Reset workflow
-            setCurrentStep(1)
-            setSelectedBatch(null)
-            setVerificationData(null)
-            setFinalPackages([])
-            setPackageConfigs([
-                { size: 100, quantity: 0, unit: 'g' },
-                { size: 250, quantity: 0, unit: 'g' },
-                { size: 500, quantity: 0, unit: 'g' },
-                { size: 1, quantity: 0, unit: 'kg' }
-            ])
-        } catch (error) {
-            console.error('Dispatch error:', error)
-            alert('Failed to dispatch packages')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const steps = [
-        {
-            number: 1,
-            title: 'Verify Batch',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
-        },
-        {
-            number: 2,
-            title: 'Configure Packaging',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-            )
-        },
-        {
-            number: 3,
-            title: 'Generate QR Codes',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-            )
-        },
-        {
-            number: 4,
-            title: 'Product Details',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-            )
-        },
-        {
-            number: 5,
-            title: 'Print & Dispatch',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-            )
-        }
-    ]
-
     return (
         <div className="min-h-screen bg-gray-50 font-inter">
-            {/* Header */}
-            <div className="bg-[#016868] text-white p-6 shadow-lg">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-lg p-2">
-                            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-                        </div>
+            <div className="bg-[#016868] text-white shadow-md">
+                <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link href="/" aria-label="Go to home" className="w-10 h-10 bg-white rounded-lg p-1 block">
+                            <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
+                        </Link>
                         <div>
-                            <h1 className="text-2xl font-bold">ANVESHA</h1>
-                            <p className="text-sm opacity-90">Manufacturing Portal</p>
+                            <div className="text-sm font-semibold">ANVESHA</div>
+                            <div className="text-xs text-white/90">QR Code Generator</div>
                         </div>
                     </div>
-                    <Link href="/" className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Home
+                    <Link href="/" className="text-sm font-semibold bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg">
+                        Home
                     </Link>
                 </div>
             </div>
 
-            {/* Progress Steps */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-                <div className="max-w-7xl mx-auto px-8 py-6">
-                    <div className="flex items-center justify-between">
-                        {steps.map((step, index) => (
-                            <div key={step.number} className="flex items-center flex-1">
-                                <div className="flex flex-col items-center flex-1">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all ${currentStep > step.number
-                                            ? 'bg-green-500 text-white'
-                                            : currentStep === step.number
-                                                ? 'bg-[#016868] text-white ring-4 ring-[#016868]/20'
-                                                : 'bg-gray-200 text-gray-500'
-                                        }`}>
-                                        {currentStep > step.number ? (
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : step.icon}
-                                    </div>
-                                    <div className={`mt-2 text-sm font-semibold text-center ${currentStep >= step.number ? 'text-gray-900' : 'text-gray-400'
-                                        }`}>
-                                        {step.title}
-                                    </div>
-                                </div>
-                                {index < steps.length - 1 && (
-                                    <div className={`h-1 flex-1 mx-4 rounded transition-all ${currentStep > step.number ? 'bg-green-500' : 'bg-gray-200'
-                                        }`} />
-                                )}
-                            </div>
-                        ))}
+            <div className="max-w-5xl mx-auto px-4 py-8">
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8 space-y-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Generate Manufacturing QR Codes</h1>
+                        <p className="text-gray-600 text-sm mt-1">Enter Batch ID and how many QR codes you need. Codes are black on white and printable/PDF-ready.</p>
                     </div>
-                </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto p-8">
-                {/* Step 1: Verify Batch */}
-                {currentStep === 1 && (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Lab-Tested Batch to Verify</h2>
-
-                            {isLoading ? (
-                                <div className="text-center py-12">
-                                    <div className="animate-spin w-12 h-12 border-4 border-[#016868] border-t-transparent rounded-full mx-auto"></div>
-                                    <p className="mt-4 text-gray-600 font-semibold">Loading batches...</p>
-                                </div>
-                            ) : (
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {availableBatches.map(batch => (
-                                        <div
-                                            key={batch.id}
-                                            onClick={() => setSelectedBatch(batch)}
-                                            className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${selectedBatch?.id === batch.id
-                                                    ? 'border-[#016868] bg-[#016868]/5 shadow-md'
-                                                    : 'border-gray-200 hover:border-[#016868]/50 hover:shadow-sm'
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    <div className="font-bold text-lg text-gray-900">{batch.batchId}</div>
-                                                    <div className="text-[#016868] font-semibold mt-1 flex items-center gap-2">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                                        </svg>
-                                                        {batch.herb}
-                                                    </div>
-                                                </div>
-                                                {selectedBatch?.id === batch.id && (
-                                                    <div className="w-6 h-6 bg-[#016868] rounded-full flex items-center justify-center">
-                                                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                                <div className="bg-white p-2 rounded border border-gray-100">
-                                                    <span className="text-gray-500">Weight:</span>
-                                                    <span className="font-semibold text-gray-900 ml-1">{batch.weight}kg</span>
-                                                </div>
-                                                <div className="bg-white p-2 rounded border border-gray-100">
-                                                    <span className="text-gray-500">Purity:</span>
-                                                    <span className="font-semibold text-green-600 ml-1">{batch.labResults.purity}%</span>
-                                                </div>
-                                                <div className="bg-white p-2 rounded col-span-2 border border-gray-100">
-                                                    <span className="text-gray-500">Lab:</span>
-                                                    <span className="font-semibold text-gray-900 ml-1 text-xs">{batch.labName}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <span className={`px-3 py-1 text-xs font-bold rounded-full ${batch.labResults.qualityGrade === 'A+'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-blue-100 text-blue-700'
-                                                    }`}>
-                                                    Grade {batch.labResults.qualityGrade}
-                                                </span>
-                                                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                    Lab Approved
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-800">Batch ID *</label>
+                            <input
+                                type="text"
+                                value={batchId}
+                                onChange={(e) => setBatchId(e.target.value)}
+                                placeholder="e.g., BATCH-2024-001"
+                                className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-semibold text-gray-900 focus:border-[#016868] focus:ring-2 focus:ring-[#016868]/20 outline-none"
+                            />
                         </div>
-
-                        {selectedBatch && (
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleVerifyBatch}
-                                    disabled={isLoading}
-                                    className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    Verify Batch & Continue
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-800">How many QR codes? *</label>
+                            <input
+                                type="number"
+                                min={1}
+                                max={2000}
+                                value={qrCount}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    if (val === '') setQrCount('')
+                                    else setQrCount(parseInt(val) || 0)
+                                }}
+                                placeholder="Enter number of QR needed"
+                                className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 font-semibold text-gray-900 focus:border-[#016868] focus:ring-2 focus:ring-[#016868]/20 outline-none placeholder:text-gray-400"
+                            />
+                        </div>
                     </div>
-                )}
 
-                {/* Step 2: Configure Packaging */}
-                {currentStep === 2 && selectedBatch && (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Configure Final Packaging</h2>
-                            <p className="text-gray-600 mb-6 font-semibold">Convert bulk package ({selectedBatch.weight}kg) into retail sizes</p>
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            onClick={handleGenerate}
+                            disabled={isGenerating}
+                            className="bg-[#016868] hover:bg-[#014d4d] text-white font-semibold px-6 py-3 rounded-lg shadow-md transition disabled:opacity-60"
+                        >
+                            {isGenerating ? 'Generating...' : 'Generate QR Codes'}
+                        </button>
+                        <button
+                            onClick={handlePrint}
+                            disabled={!codes.length}
+                            className="bg-gray-900 hover:bg-black text-white font-semibold px-6 py-3 rounded-lg shadow-md transition disabled:opacity-40"
+                        >
+                            Print / Save as PDF
+                        </button>
+                        <span className="text-sm text-gray-600 self-center">
+                            {codes.length ? `${codes.length} code(s) ready` : 'No codes yet'}
+                        </span>
+                    </div>
 
-                            {/* Supply Chain Timeline */}
-                            {verificationData && (
-                                <div className="mb-6 p-4 bg-[#016868]/5 rounded-lg border border-[#016868]/20">
-                                    <h3 className="font-bold text-[#016868] mb-3 flex items-center gap-2">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                        Batch Verified - Supply Chain History
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {verificationData.supplyChainHistory.map((stage: any, index: number) => (
-                                            <div key={index} className="flex items-start gap-3">
-                                                <div className="w-8 h-8 bg-[#016868] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                                    {index + 1}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-semibold text-gray-900">{stage.stage}</div>
-                                                    <div className="text-sm text-gray-600">{stage.details}</div>
-                                                    <div className="text-xs text-gray-500">{stage.date} • {stage.location}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Package Configuration */}
-                            <div className="space-y-4">
-                                {packageConfigs.map((config, index) => (
-                                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                        <div className="flex-1">
-                                            <div className="font-semibold text-gray-900">
-                                                {config.size}{config.unit} Packages
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                                Total: {((config.unit === 'kg' ? config.size * 1000 : config.size) * config.quantity / 1000).toFixed(2)}kg
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => updatePackageQuantity(index, config.quantity - 1)}
-                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-[#016868] transition-colors font-bold"
-                                            >
-                                                -
-                                            </button>
-                                            <input
-                                                type="number"
-                                                value={config.quantity}
-                                                onChange={(e) => updatePackageQuantity(index, parseInt(e.target.value) || 0)}
-                                                className="w-20 text-center border-2 border-gray-300 rounded-lg py-2 font-bold text-gray-900"
-                                            />
-                                            <button
-                                                onClick={() => updatePackageQuantity(index, config.quantity + 1)}
-                                                className="w-8 h-8 bg-white border-2 border-gray-300 rounded-lg hover:border-[#016868] transition-colors font-bold"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
+                    {codes.length > 0 && (
+                        <div className="border-t border-gray-200 pt-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">Preview</h2>
+                            <div className="grid sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {codes.slice(0, 12).map(code => (
+                                    <div key={code.id} className="p-3 border border-gray-200 rounded-lg shadow-sm text-center">
+                                        <img src={code.dataUrl} alt={code.id} className="w-full mb-2" />
+                                        <div className="text-xs font-semibold text-gray-800 break-words">{code.id}</div>
                                     </div>
                                 ))}
-
-                                {/* Add Custom Package Size */}
-                                <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                    <input
-                                        type="number"
-                                        value={customPackageSize}
-                                        onChange={(e) => setCustomPackageSize(e.target.value)}
-                                        placeholder="Custom size"
-                                        className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-2 text-gray-900 font-semibold"
-                                    />
-                                    <select
-                                        value={customPackageUnit}
-                                        onChange={(e) => setCustomPackageUnit(e.target.value)}
-                                        className="border-2 border-gray-300 rounded-lg px-4 py-2 text-gray-900 font-semibold"
-                                    >
-                                        <option value="g">g</option>
-                                        <option value="kg">kg</option>
-                                    </select>
-                                    <button
-                                        onClick={addCustomPackage}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition-colors"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
                             </div>
-
-                            {/* Summary */}
-                            <div className="mt-6 p-4 bg-gradient-to-r from-[#016868]/10 to-green-50 rounded-lg border-2 border-[#016868]/20">
-                                <div className="grid grid-cols-3 gap-4 text-center">
-                                    <div>
-                                        <div className="text-2xl font-bold text-[#016868]">{calculateTotalPackages()}</div>
-                                        <div className="text-sm text-gray-600 font-semibold">Total Packages</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-[#016868]">{calculateUsedWeight().toFixed(2)}kg</div>
-                                        <div className="text-sm text-gray-600 font-semibold">Weight Used</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-gray-600">{(selectedBatch.weight - calculateUsedWeight()).toFixed(2)}kg</div>
-                                        <div className="text-sm text-gray-600 font-semibold">Remaining</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setCurrentStep(1)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                                Back
-                            </button>
-                            <button
-                                onClick={proceedToQRGeneration}
-                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
-                            >
-                                Generate QR Codes
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 3: Generate QR Codes */}
-                {currentStep === 3 && (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Generate Final QR Codes</h2>
-
-                            {finalPackages.length === 0 ? (
-                                <div className="text-center py-12">
-                                    {isLoading ? (
-                                        <>
-                                            <div className="animate-spin w-16 h-16 border-4 border-[#016868] border-t-transparent rounded-full mx-auto mb-4"></div>
-                                            <p className="text-lg font-semibold text-gray-900">Generating QR Codes...</p>
-                                            <div className="mt-4 max-w-md mx-auto">
-                                                <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
-                                                    <div
-                                                        className="bg-[#016868] h-full transition-all duration-300"
-                                                        style={{ width: `${qrGenerationProgress}%` }}
-                                                    />
-                                                </div>
-                                                <p className="mt-2 text-sm text-gray-600 font-semibold">{qrGenerationProgress}% Complete</p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="mb-4">
-                                                <svg className="w-16 h-16 mx-auto text-[#016868]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                                </svg>
-                                            </div>
-                                            <p className="text-lg font-semibold text-gray-900 mb-2">Ready to Generate QR Codes</p>
-                                            <p className="text-gray-600 mb-6 font-semibold">
-                                                {calculateTotalPackages()} unique QR codes will be generated with blockchain verification
-                                            </p>
-                                            <button
-                                                onClick={generateFinalQRCodes}
-                                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-all"
-                                            >
-                                                Generate {calculateTotalPackages()} QR Codes
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            ) : (
-                                <div>
-                                    <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            <span className="font-bold text-green-900">Successfully Generated {finalPackages.length} QR Codes</span>
-                                        </div>
-                                        <div className="text-sm text-green-800 font-semibold">
-                                            <strong>Blockchain Transaction:</strong>
-                                            <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{blockchainTxHash}</code>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-                                        {finalPackages.slice(0, 12).map(pkg => (
-                                            <div key={pkg.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-center">
-                                                <img src={pkg.qrCode} alt={pkg.id} className="w-full mb-2" />
-                                                <div className="text-xs font-semibold text-gray-900">{pkg.id}</div>
-                                                <div className="text-xs text-gray-600">{pkg.weight < 1000 ? pkg.weight + 'g' : (pkg.weight / 1000) + 'kg'}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {finalPackages.length > 12 && (
-                                        <p className="text-center text-sm text-gray-500 mt-4 font-semibold">
-                                            Showing 12 of {finalPackages.length} packages
-                                        </p>
-                                    )}
-                                </div>
+                            {codes.length > 12 && (
+                                <p className="text-sm text-gray-500 mt-3">Showing first 12 of {codes.length}. All codes will print.</p>
                             )}
                         </div>
-
-                        {finalPackages.length > 0 && (
-                            <div className="flex justify-between">
-                                <button
-                                    onClick={() => setCurrentStep(2)}
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Back
-                                </button>
-                                <button
-                                    onClick={() => setCurrentStep(4)}
-                                    className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
-                                >
-                                    Add Product Details
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Step 4: Product Details */}
-                {currentStep === 4 && (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Product Information</h2>
-
-                            <div className="space-y-4">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Product Name *</label>
-                                        <input
-                                            type="text"
-                                            value={productInfo.productName}
-                                            onChange={(e) => setProductInfo({ ...productInfo, productName: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                            placeholder="e.g., Ashwagandha Root Extract"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Manufacturer Name *</label>
-                                        <input
-                                            type="text"
-                                            value={productInfo.manufacturerName}
-                                            onChange={(e) => setProductInfo({ ...productInfo, manufacturerName: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                            placeholder="Company name"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                                    <textarea
-                                        value={productInfo.description}
-                                        onChange={(e) => setProductInfo({ ...productInfo, description: e.target.value })}
-                                        rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                        placeholder="Product description..."
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Benefits</label>
-                                    <textarea
-                                        value={productInfo.benefits}
-                                        onChange={(e) => setProductInfo({ ...productInfo, benefits: e.target.value })}
-                                        rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                        placeholder="Key benefits..."
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Usage Instructions</label>
-                                    <textarea
-                                        value={productInfo.usage}
-                                        onChange={(e) => setProductInfo({ ...productInfo, usage: e.target.value })}
-                                        rows={2}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                        placeholder="How to use..."
-                                    />
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">License Number</label>
-                                        <input
-                                            type="text"
-                                            value={productInfo.manufacturerLicense}
-                                            onChange={(e) => setProductInfo({ ...productInfo, manufacturerLicense: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                            placeholder="Manufacturing license"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Shelf Life</label>
-                                        <select
-                                            value={productInfo.expiryMonths}
-                                            onChange={(e) => setProductInfo({ ...productInfo, expiryMonths: e.target.value })}
-                                            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                        >
-                                            <option value="12">12 Months</option>
-                                            <option value="18">18 Months</option>
-                                            <option value="24">24 Months</option>
-                                            <option value="36">36 Months</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setCurrentStep(3)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                                Back
-                            </button>
-                            <button
-                                onClick={() => setCurrentStep(5)}
-                                className="bg-[#016868] hover:bg-[#014d4d] text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center gap-2"
-                            >
-                                Proceed to Dispatch
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 5: Print & Dispatch */}
-                {currentStep === 5 && (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Print Labels & Dispatch</h2>
-
-                            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                <div className="p-6 bg-gradient-to-br from-[#016868]/10 to-green-50 rounded-lg border-2 border-[#016868]/20">
-                                    <div className="text-4xl font-bold text-[#016868] mb-2">{finalPackages.length}</div>
-                                    <div className="text-gray-700 font-semibold">Total Packages Ready</div>
-                                </div>
-                                <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border-2 border-blue-200">
-                                    <div className="text-4xl font-bold text-blue-700 mb-2">{calculateUsedWeight().toFixed(2)}kg</div>
-                                    <div className="text-gray-700 font-semibold">Total Weight</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 mb-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Dispatch Date</label>
-                                    <input
-                                        type="date"
-                                        value={dispatchDate}
-                                        onChange={(e) => setDispatchDate(e.target.value)}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Dispatch Notes (Optional)</label>
-                                    <textarea
-                                        value={dispatchNotes}
-                                        onChange={(e) => setDispatchNotes(e.target.value)}
-                                        rows={3}
-                                        className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-semibold focus:border-[#016868] outline-none"
-                                        placeholder="Add any dispatch notes..."
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={handlePrintLabels}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                    </svg>
-                                    Print All Labels
-                                </button>
-                                <button
-                                    onClick={handleDispatch}
-                                    disabled={isLoading || !productInfo.manufacturerName}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    {isLoading ? 'Processing...' : 'Mark as Dispatched'}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setCurrentStep(4)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                                Back
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     )

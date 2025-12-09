@@ -205,7 +205,7 @@ export default function PackagingPage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <div className="font-semibold text-gray-900">{batch.processorBatchId || batch.id}</div>
-                                                    <div className="text-sm text-gray-600 mt-1">🌿 {batch.herb}</div>
+                                                    <div className="text-sm text-gray-600 mt-1">{batch.herb}</div>
                                                     <div className="text-sm text-gray-500 mt-1">{batch.weight}kg • {batch.createdAt}</div>
                                                 </div>
                                                 {selectedBatch?.id === batch.id && (
@@ -305,7 +305,7 @@ export default function PackagingPage() {
                                         <div className="font-semibold text-gray-900">{selectedBatch.processorBatchId || 'N/A'}</div>
                                     </div>
                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-3 rounded-lg">
-                                        <div className="text-emerald-700 text-xs mb-1">🌿 Herb</div>
+                                        <div className="text-emerald-700 text-xs mb-1">Herb</div>
                                         <div className="font-semibold text-gray-900">{selectedBatch.herb}</div>
                                     </div>
                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-3 rounded-lg">
@@ -340,7 +340,7 @@ export default function PackagingPage() {
                                                 <img src={qrCodePreview} alt="QR Code Preview" className="w-48 h-48 mx-auto" />
                                             </div>
                                             <div className="text-base font-semibold text-gray-900">{selectedBatch.herb} Root Powder</div>
-                                            <div className="text-sm text-emerald-700 mt-1">🌿 Organic • ✓ AYUSH Certified</div>
+                                            <div className="text-sm text-emerald-700 mt-1">Organic • ✓ AYUSH Certified</div>
                                             <div className="mt-3 pt-3 border-t border-gray-200">
                                                 <div className="text-sm text-gray-600">Net Wt: <span className="font-semibold">{packageSize}kg</span></div>
                                                 <div className="text-sm text-gray-600">Batch: <span className="font-semibold">{selectedBatch.processorBatchId || selectedBatch.id}</span></div>

@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
 
   const roles = ['PROCESSOR', 'LAB', 'MANUFACTURER', 'ADMIN']
 
@@ -32,7 +33,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://192.168.50.154:3000/api/approval/request', {
+      const response = await fetch(`${API_BASE}/api/approval/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,9 +73,9 @@ export default function RegisterPage() {
         <nav className="bg-[#014848] text-white shadow-md">
           <div className="max-w-7xl mx-auto px-6 py-3">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-xl p-1 shadow-md">
+              <Link href="/" aria-label="Go to home" className="w-16 h-16 bg-white rounded-xl p-1 shadow-md block">
                 <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
-              </div>
+              </Link>
               <div>
                 <h1 className="text-sm font-bold">Government of India | भारत सरकार</h1>
                 <p className="text-xs font-medium">Ministry of AYUSH | आयुष मंत्रालय</p>
@@ -113,11 +114,11 @@ export default function RegisterPage() {
       {/* Navigation */}
       <nav className="bg-[#014848] text-white shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-md">
-                <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
-              </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+                <Link href="/" aria-label="Go to home" className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white rounded-xl p-1 shadow-md block">
+                  <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
+                </Link>
               <div className="hidden sm:block">
                 <h1 className="text-xs sm:text-sm font-bold">Government of India | भारत सरकार</h1>
                 <p className="text-[10px] sm:text-xs font-medium">Ministry of AYUSH | आयुष मंत्रालय</p>
