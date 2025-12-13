@@ -17,6 +17,9 @@ const inter = Inter({
 export const metadata: Metadata = {
     title: 'ANVESHA - Ayurvedic Herb Traceability',
     description: 'Blockchain-based traceability system for Ayurvedic herbs',
+    icons: {
+        icon: '/logo.png',
+    }
 }
 
 export default function RootLayout({
