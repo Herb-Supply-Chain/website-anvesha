@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { GovFooter } from '../components/GovFooter'
 
 export default function PortalsPage() {
     const portals = [
@@ -47,7 +48,7 @@ export default function PortalsPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 bg-[#014848] shadow-md">
                 <div className="max-w-7xl mx-auto px-6 py-3">
@@ -78,7 +79,7 @@ export default function PortalsPage() {
                 </div>
             </nav>
 
-            <main className="pt-24 pb-20 px-6">
+            <main className="pt-24 pb-20 px-6 flex-1">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <span className="text-teal-600 font-bold tracking-wider text-sm uppercase mb-4 block">Central Access Point</span>
@@ -130,11 +131,7 @@ export default function PortalsPage() {
                 </div>
             </main>
 
-            <footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6">
-                <div className="max-w-7xl mx-auto text-center">
-                    <p className="text-teal-200 text-sm">© 2024 Ministry of AYUSH, Government of India. All rights reserved.</p>
-                </div>
-            </footer>
+            <GovFooter />
         </div>
     )
 }

@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { GovFooter } from '../components/GovFooter'
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white flex flex-col">
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-50 bg-[#014848] shadow-md">
                 <div className="max-w-7xl mx-auto px-6 py-3">
@@ -36,7 +37,7 @@ export default function AboutPage() {
                 </div>
             </nav>
 
-            <main className="pt-24 pb-20">
+            <main className="pt-24 pb-20 flex-1">
                 {/* Hero Section */}
                 <section className="bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 py-20 px-6">
                     <div className="max-w-4xl mx-auto text-center">
@@ -122,11 +123,7 @@ export default function AboutPage() {
                 </section>
             </main>
 
-            <footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-12 px-6">
-                <div className="max-w-7xl mx-auto text-center">
-                    <p className="text-teal-200 text-sm">© 2024 Ministry of AYUSH, Government of India. All rights reserved.</p>
-                </div>
-            </footer>
+            <GovFooter />
         </div>
     )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { GovFooter } from './components/GovFooter'
 import { useRouter } from 'next/navigation'
 
 interface LoginCardProps {
@@ -736,56 +737,7 @@ export default function LandingPage() {
             </section >
 
             {/* Footer */}
-            < footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-8 sm:py-10 lg:py-12 px-4 sm:px-6" >
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
-                        <div>
-                            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-teal-700/50 mb-4">
-                                <span className="font-bold text-lg">ANVESHA</span>
-                            </div>
-                            <p className="text-teal-100 text-sm leading-relaxed">
-                                {t[language].footerTagline}
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].quickLinks}</h4>
-                            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-teal-200">
-                                <li><Link href="/" className="hover:text-white transition-colors">{t[language].home}</Link></li>
-                                <li><Link href="/about" className="hover:text-white transition-colors">{t[language].aboutUs}</Link></li>
-                                <li><Link href="/contact" className="hover:text-white transition-colors">{t[language].contact}</Link></li>
-                                <li><Link href="/consumer-portal" className="hover:text-white transition-colors">Verify Product</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].portals}</h4>
-                            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-teal-200">
-                                <li><Link href="/processor" className="hover:text-white transition-colors">{t[language].processorLogin}</Link></li>
-                                <li><Link href="/lab" className="hover:text-white transition-colors">{t[language].labDashboard}</Link></li>
-                                <li><Link href="/manufacturer" className="hover:text-white transition-colors">{t[language].manufacturerPortal}</Link></li>
-                                <li><Link href="/admin" className="hover:text-white transition-colors">{t[language].adminConsole}</Link></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-bold mb-3 sm:mb-4 text-teal-50 text-sm sm:text-base">{t[language].contact}</h4>
-                            <p className="text-teal-200 text-xs sm:text-sm leading-relaxed">
-                                Ministry of AYUSH<br />
-                                AYUSH Bhawan, B Block<br />
-                                GPO Complex, INA<br />
-                                Mumbai - 400099
-                            </p>
-                            <div className="mt-3 sm:mt-4 flex gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-teal-200">
-                                <a href="#" className="hover:text-white transition-colors">X</a>
-                                <a href="#" className="hover:text-white transition-colors">Facebook</a>
-                                <a href="#" className="hover:text-white transition-colors">Instagram</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="pt-6 sm:pt-8 border-t border-teal-800 text-center text-xs sm:text-sm text-teal-400 px-4">
-                        {t[language].copyright}
-                        {t[language].byDevs}
-                    </div>
-                </div>
-            </footer >
+            <GovFooter />
         </div >
     )
 }
