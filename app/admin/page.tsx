@@ -30,7 +30,7 @@ interface PendingRegistration {
 }
 
 export default function AdminPage() {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
+    const API_BASE = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
     const [activeSection, setActiveSection] = useState('approve-registrations')
     const [showApprovals, setShowApprovals] = useState(true)
     const [selectedRegistration, setSelectedRegistration] = useState<PendingRegistration | null>(null)
@@ -335,7 +335,7 @@ export default function AdminPage() {
                     const token = getToken()
                     if (!token) return
 
-                    const response = await fetch('http://192.168.50.154:3000/api/auth/me', {
+                    const response = await fetch(`${API_BASE}/api/auth/me`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -372,7 +372,7 @@ export default function AdminPage() {
                 headers['Authorization'] = `Bearer ${token}`
             }
 
-            const response = await fetch('http://192.168.50.154:3000/api/approval/requests', {
+            const response = await fetch(`${API_BASE}/api/approval/requests`, {
                 method: 'GET',
                 headers,
             })
@@ -446,7 +446,7 @@ export default function AdminPage() {
         try {
             console.log('Sending approve request:', { id, token: token ? 'Token present' : 'No token' })
             
-            const response = await fetch(`http://192.168.50.154:3000/api/approval/requests/approve`, {
+            const response = await fetch(`${API_BASE}/api/approval/requests/approve`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -500,7 +500,7 @@ export default function AdminPage() {
         try {
             console.log('Sending reject request:', { id, token: token ? 'Token present' : 'No token' })
             
-            const response = await fetch(`http://192.168.50.154:3000/api/approval/requests/reject`, {
+            const response = await fetch(`${API_BASE}/api/approval/requests/reject`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

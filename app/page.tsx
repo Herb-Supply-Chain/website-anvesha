@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { GovFooter } from './components/GovFooter'
 import { useRouter } from 'next/navigation'
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
+
 interface LoginCardProps {
     language: 'en' | 'hi'
     t: any
@@ -23,7 +25,7 @@ function LoginCard({ language, t }: LoginCardProps) {
         setIsLoading(true)
 
         try {
-            const response = await fetch('http://192.168.50.154:3000/api/auth/email/signin', {
+            const response = await fetch(`${APP_URL}/api/auth/email/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

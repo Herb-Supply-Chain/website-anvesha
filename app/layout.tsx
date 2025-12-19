@@ -15,10 +15,10 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-    title: 'ANVESHA - Ayurvedic Herb Traceability',
-    description: 'Blockchain-based traceability system for Ayurvedic herbs',
+    title: 'Anvesha',
+    description: 'Unveils the truth by providing transparency',
     icons: {
-        icon: '/logo.png',
+        icon: '/image.png',
     }
 }
 

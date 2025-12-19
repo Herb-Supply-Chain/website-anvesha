@@ -14,8 +14,9 @@ export interface User {
     createdAt: string;
 }
 
-//Updated API URL to point to localhost:5000
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Base API URL derived from deployment env; falls back to same-origin /api
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
+const API_URL = APP_URL ? `${APP_URL}/api` : '/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -95,8 +96,8 @@ export const AuthService = {
 
     login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
         try {
-            // Call real API for authentication
-            const apiUrl = 'http://192.168.50.154:3000/api/auth/email/signin';
+            // Call deployed API for authentication
+            const apiUrl = `${API_URL}/auth/email/signin`;
             console.log('🔵 Attempting signin with:', { email, apiUrl });
 
             const response = await axios.post(apiUrl,

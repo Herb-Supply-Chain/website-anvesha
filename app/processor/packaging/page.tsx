@@ -7,7 +7,8 @@ import QRCode from 'qrcode'
 import { Batch, Package } from '@/lib/types/batch'
 import { generatePackagePDF, downloadPDF } from '@/lib/pdf-generator'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+const API_URL = APP_URL ? `${APP_URL}/api` : '/api'
 
 export default function PackagingPage() {
     const router = useRouter()
@@ -48,7 +49,7 @@ export default function PackagingPage() {
         if (!selectedBatch) return
 
         try {
-            const qrData = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/consumer-portal?batch=${selectedBatch.id}`
+            const qrData = `${APP_URL || ''}/consumer-portal?batch=${selectedBatch.id}`
             const qrDataUrl = await QRCode.toDataURL(qrData, {
                 width: 200,
                 margin: 2,
@@ -71,7 +72,7 @@ export default function PackagingPage() {
             const numPackages = Math.ceil(selectedBatch.weight / parseInt(packageSize))
 
             for (let i = 0; i < numPackages; i++) {
-                const qrData = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/consumer-portal?package=PKG-${selectedBatch.id}-${i + 1}`
+                const qrData = `${APP_URL || ''}/consumer-portal?package=PKG-${selectedBatch.id}-${i + 1}`
 
                 await axios.post(`${API_URL}/packages`, {
                     batchId: selectedBatch.id,
