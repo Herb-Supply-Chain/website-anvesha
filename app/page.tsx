@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { GovFooter } from './components/GovFooter'
 import { useRouter } from 'next/navigation'
+import { DownloadButton } from './components/DownloadButton'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
 
@@ -516,7 +517,13 @@ export default function LandingPage() {
                                 </h1>
                             </div>
                         </div>
+                       
+                       
                         <div className="flex items-center gap-1 sm:gap-2">
+                            <div>
+                                <DownloadButton/>
+                            </div>
+                            
                             <button
                                 onClick={() => setLanguage('en')}
                                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-all hover:scale-105 ${language === 'en'
