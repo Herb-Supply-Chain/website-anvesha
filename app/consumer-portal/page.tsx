@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-export default function ConsumerPortal() {
+interface BarcodeDetector {
+  detect(image: ImageBitmapSource): Promise<Array<{ rawValue: string }>>
+}
+
+function ConsumerPortalContent() {
     const searchParams = useSearchParams()
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://server-anvesha.onrender.com'
     const [phoneNumber, setPhoneNumber] = useState('')
@@ -224,7 +228,7 @@ export default function ConsumerPortal() {
         // Prepare barcode detector if supported
         if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
             try {
-                barcodeDetectorRef.current = new BarcodeDetector({ formats: ['qr_code'] })
+                barcodeDetectorRef.current = new (window as any).BarcodeDetector({ formats: ['qr_code'] })
             } catch (err) {
                 console.warn('BarcodeDetector init failed', err)
             }
@@ -743,3 +747,10 @@ Blockchain-Verified Traceability System
     )
 }
 
+export default function ConsumerPortal() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>}>
+            <ConsumerPortalContent />
+        </Suspense>
+    )
+}

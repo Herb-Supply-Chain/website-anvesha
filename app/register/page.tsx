@@ -74,7 +74,7 @@ export default function RegisterPage() {
           <div className="max-w-7xl mx-auto px-6 py-3">
             <div className="flex items-center gap-4">
               <Link href="/" aria-label="Go to home" className="w-16 h-16 bg-white rounded-xl p-1 shadow-md block">
-                <img src="/logo.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
+                <img src="/image.png" alt="ANVESHA Logo" className="w-full h-full object-contain" />
               </Link>
               <div>
                 <h1 className="text-sm font-bold">Government of India | भारत सरकार</h1>

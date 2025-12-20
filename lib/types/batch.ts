@@ -131,3 +131,26 @@ export interface BatchStats {
     approved: number;
     packaged: number;
 }
+
+interface BarcodeDetectorOptions {
+  formats?: string[];
+}
+
+interface DetectedBarcode {
+  boundingBox: DOMRectReadOnly;
+  rawValue: string;
+  format: string;
+  cornerPoints: { x: number; y: number }[];
+}
+
+declare class BarcodeDetector {
+  constructor(options?: BarcodeDetectorOptions);
+  static getSupportedFormats(): Promise<string[]>;
+  detect(image: CanvasImageSource): Promise<DetectedBarcode[]>;
+}
+
+declare global {
+  interface Window {
+    BarcodeDetector: typeof BarcodeDetector | undefined;
+  }
+}
