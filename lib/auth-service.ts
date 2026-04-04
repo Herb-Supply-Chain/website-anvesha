@@ -1,6 +1,7 @@
 
 import axios, { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
+import { getApiBaseUrl } from './api-config';
 
 export type UserRole = 'Processor' | 'Lab QA' | 'Manufacturer' | 'Admin' | 'Unassigned';
 export type UserStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -14,9 +15,7 @@ export interface User {
     createdAt: string;
 }
 
-// Base API URL derived from deployment env; falls back to same-origin /api
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '');
-const API_URL = APP_URL ? `${APP_URL}/api` : '/api';
+const API_URL = getApiBaseUrl();
 
 const api = axios.create({
     baseURL: API_URL,

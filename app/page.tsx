@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { GovFooter } from './components/GovFooter'
 import { useRouter } from 'next/navigation'
 import { DownloadButton } from './components/DownloadButton'
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
+import { getApiBaseUrl } from '@/lib/api-config'
 
 interface LoginCardProps {
     language: 'en' | 'hi'
@@ -26,7 +25,7 @@ function LoginCard({ language, t }: LoginCardProps) {
         setIsLoading(true)
 
         try {
-            const response = await fetch(`${APP_URL}/api/auth/email/signin`, {
+            const response = await fetch(`${getApiBaseUrl()}/auth/email/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -34,7 +33,14 @@ function LoginCard({ language, t }: LoginCardProps) {
                 body: JSON.stringify({ email, password }),
             })
 
-            const data = await response.json()
+            let data: Record<string, unknown>
+            try {
+                data = await response.json()
+            } catch {
+                setError('Server returned an invalid response. Check that NEXT_PUBLIC_APP_URL points to your backend (without /api).')
+                setIsLoading(false)
+                return
+            }
 
             if (response.ok && data) {
                 // Store token if available
@@ -90,11 +96,16 @@ function LoginCard({ language, t }: LoginCardProps) {
                     }
                 }, 100)
             } else {
-                setError(data?.message || 'Login failed. Please check your credentials.')
+                const message =
+                    (typeof data?.message === 'string' && data.message) ||
+                    (Array.isArray(data?.errors) && data.errors[0]?.message) ||
+                    'Login failed. Please check your credentials.'
+                setError(message)
                 setIsLoading(false)
             }
         } catch (err) {
-            setError('Unable to connect to server. Please try again.')
+            console.error('Login request failed:', err)
+            setError(`Unable to reach the API at ${getApiBaseUrl()}. Check NEXT_PUBLIC_APP_URL and restart the dev server.`)
             setIsLoading(false)
         }
     }
