@@ -12,6 +12,15 @@ interface LoginCardProps {
     t: any
 }
 
+type LoginResponse = {
+    token?: string
+    role?: string
+    message?: string
+    user?: { role?: string }
+    data?: { token?: string; user?: { role?: string } }
+    errors?: Array<{ message?: string }>
+}
+
 function LoginCard({ language, t }: LoginCardProps) {
     const router = useRouter()
     const [email, setEmail] = useState('')
@@ -33,7 +42,7 @@ function LoginCard({ language, t }: LoginCardProps) {
                 body: JSON.stringify({ email, password }),
             })
 
-            let data: Record<string, unknown>
+            let data: LoginResponse
             try {
                 data = await response.json()
             } catch {
